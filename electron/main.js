@@ -3,6 +3,7 @@ import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createBackend } from "./backend.js";
+import { GITHUB_CLIENT_ID } from "./config.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const tokenFile = () => path.join(app.getPath("userData"), "github-token.bin");
@@ -26,7 +27,11 @@ const tokens = {
 };
 
 const openExternal = (url) => (url.startsWith("https://") ? shell.openExternal(url) : undefined);
-const backend = createBackend({ tokens, clientId: process.env.ISSUE_SCOUT_GITHUB_CLIENT_ID, openExternal });
+const backend = createBackend({
+  tokens,
+  clientId: process.env.ISSUE_SCOUT_GITHUB_CLIENT_ID?.trim() || GITHUB_CLIENT_ID,
+  openExternal,
+});
 
 ipcMain.handle("scout:request", (event, route, method) => {
   if (!event.senderFrame?.url.startsWith("file://") || typeof route !== "string" || typeof method !== "string")

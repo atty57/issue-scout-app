@@ -17,7 +17,7 @@ export function createBackend({ tokens, clientId, openExternal }) {
       return [200, { login: user.login, avatar_url: user.avatar_url, onboarding: "ready" }];
     },
     "POST /auth/device": async () => {
-      if (!clientId) return [503, { error: "Set ISSUE_SCOUT_GITHUB_CLIENT_ID to the app's GitHub OAuth client ID." }];
+      if (!clientId) return [503, { error: "GitHub sign-in isn't configured in this build. Please contact the app maintainer." }];
       device = await startDeviceFlow(clientId);
       void openExternal(device.verification_uri);
       return [200, { user_code: device.user_code, verification_uri: device.verification_uri }];
