@@ -48,6 +48,8 @@ export async function githubRequest(token, route, { method = "GET", body, fetchI
     const fallback = status >= 500 ? `GitHub is unavailable (HTTP ${status}).` : `GitHub refused the request (HTTP ${status})${detail ? `: ${detail}` : ""}.`;
     throw new GitHubError(status, known[status] || fallback, undefined, detail);
   }
+  // Variable and secret writes answer 201 or 204 with an empty body.
+  if ([201, 204].includes(response.status)) return response.json().catch(() => null);
   return response.json();
 }
 

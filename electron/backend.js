@@ -4,6 +4,7 @@ import {
   getUser, startDeviceFlow, waitForToken, githubRequest, GitHubError,
   readScoutRepository, validRepositoryName, validRepository, SCOUT_TEMPLATE,
 } from "./github.js";
+import { createModelRoutes } from "./models.js";
 import { createProfileRoutes } from "./profile.js";
 
 const NOT_YET = [501, { error: "This part of Issue Scout isn't in the desktop app yet." }];
@@ -62,8 +63,10 @@ export function createBackend({ tokens, repositories, clientId, openExternal, fe
     ...(repositoryError ? { repository_error: repositoryError } : {}),
   });
 
+  const profile = createProfileRoutes({ repositoryContext, fetchImpl });
   const routes = {
-    ...createProfileRoutes({ repositoryContext, fetchImpl }),
+    ...profile.routes,
+    ...createModelRoutes({ repositoryContext, finishSetup: profile.finishSetup, fetchImpl }),
     "GET /api/me": async () => {
       const { token, user, assertCurrent } = await signedIn();
       const saved = repositories.get(user.id);

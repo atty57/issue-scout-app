@@ -12,6 +12,7 @@ import { api, isMock } from "../api";
 import { ApiError, errorMessage } from "../errors";
 import type { Connection, ScoutSettings as ScoutSettingsType } from "../types";
 import { ErrorState, ListField, Loading, fieldErrors, joinList, parseList, useResource } from "../components/ui";
+import ModelSettings from "./ModelSettings";
 
 const countFields: [keyof ScoutSettingsType, string, string][] = [
   [
@@ -239,6 +240,7 @@ function Editor({ initial, onReload }: { initial: ScoutSettingsType; onReload: (
           ))
         )}
       </section>}
+      {!isMock && <ModelSettings />}
       <form onSubmit={save} noValidate>
         <fieldset disabled={busy}>
           <div className="scout-settings-layout">

@@ -147,6 +147,24 @@ export type ScoutSettings = {
   email: string;
   tracing_enabled: boolean;
 };
+// Desktop models per stage (electron/models.js). Secret values never reach the renderer, only names.
+export type ModelAuth = "api-key" | "subscription";
+export type ModelProvider = {
+  id: string;
+  label: string;
+  credentials: Partial<Record<ModelAuth, string>>;
+  model: "required" | "optional";
+  model_hint: string;
+  base_url?: boolean;
+};
+export type ModelStage = { provider: string; auth: ModelAuth; model: string; base_url: string };
+export type ModelStageUpdate = ModelStage & { key: string };
+export type ModelSettings = {
+  providers: ModelProvider[];
+  secrets: string[];
+  picker: ModelStage;
+  solver: ModelStage;
+};
 export type Connection = {
   id: "github" | "solver" | "ranking" | "email" | "tracing";
   name: string;

@@ -151,36 +151,45 @@ export function createProfileRoutes({ repositoryContext, fetchImpl }) {
       for (const key of ["labels", "documentation_labels"]) raw[key] = value[key].map((label) => label.trim());
       raw.scouting = { ...raw.scouting, ...Object.fromEntries([...COUNTS, "min_score", "min_confidence"].map((key) => [key, value[key]])) };
     }
-    let revision = previous.revision, updatedAt = previous.updatedAt;
-    if (JSON.stringify(raw) !== JSON.stringify(previous.raw)) {
-      const contents = Buffer.from(`${JSON.stringify(raw, null, 2)}\n`, "utf8");
-      if (contents.length > MAX_PROFILE_BYTES) throw new GitHubError(422, "The saved profile would exceed 250 KB. Shorten your profile or settings before saving.", { profile: "Keep the full profile file below 250 KB." });
-      context.assertCurrent();
-      let result;
-      try {
-        result = await request(context, "/contents/profile.json", {
-          method: "PUT", body: {
-            message: kind === "profile" ? "Issue Scout: update profile" : "Issue Scout: update scouting settings",
-            branch: context.repo.default_branch, sha: previous.revision,
-            content: contents.toString("base64"),
-          },
-        });
-      } catch (error) {
-        if (![409, 422].includes(error.status)) throw error;
-        // GitHub answers 409 both for a newer file and for branch rules; only a newer file is fixed by reloading.
-        const latest = error.status === 409 ? await read(context).catch(() => undefined) : undefined;
-        if (latest && latest.revision !== previous.revision) throw new GitHubError(409, "Your profile changed on GitHub. Reload the latest version before saving again.");
-        throw new GitHubError(422, `GitHub refused to save profile.json${error.detail ? `: ${error.detail}` : ""}. Check this repository's branch rules and your permissions.`);
-      }
-      context.assertCurrent();
-      if (!validSha(result.content?.sha)) throw new GitHubError(502, "GitHub saved the file but returned incomplete information. Reload before saving again.");
-      revision = result.content.sha; updatedAt = commitDate(result.commit);
-      written = { key: editRevision(context, revision), raw, revision, updatedAt };
-    }
+    let { revision, updatedAt } = previous;
+    if (JSON.stringify(raw) !== JSON.stringify(previous.raw))
+      ({ revision, updatedAt } = await write(context, previous, raw, kind === "profile" ? "Issue Scout: update profile" : "Issue Scout: update scouting settings"));
     return [200, kind === "profile" ? asProfile(raw, editRevision(context, revision), updatedAt) : asSettings(raw, editRevision(context, revision))];
   }
 
-  return {
+  // Commits `raw` as profile.json on top of `previous`, which must be the file GitHub has now.
+  async function write(context, previous, raw, message) {
+    const contents = Buffer.from(`${JSON.stringify(raw, null, 2)}\n`, "utf8");
+    if (contents.length > MAX_PROFILE_BYTES) throw new GitHubError(422, "The saved profile would exceed 250 KB. Shorten your profile or settings before saving.", { profile: "Keep the full profile file below 250 KB." });
+    context.assertCurrent();
+    let result;
+    try {
+      result = await request(context, "/contents/profile.json", {
+        method: "PUT", body: { message, branch: context.repo.default_branch, sha: previous.revision, content: contents.toString("base64") },
+      });
+    } catch (error) {
+      if (![409, 422].includes(error.status)) throw error;
+      // GitHub answers 409 both for a newer file and for branch rules; only a newer file is fixed by reloading.
+      const latest = error.status === 409 ? await read(context).catch(() => undefined) : undefined;
+      if (latest && latest.revision !== previous.revision) throw new GitHubError(409, "Your profile changed on GitHub. Reload the latest version before saving again.");
+      throw new GitHubError(422, `GitHub refused to save profile.json${error.detail ? `: ${error.detail}` : ""}. Check this repository's branch rules and your permissions.`);
+    }
+    context.assertCurrent();
+    if (!validSha(result.content?.sha)) throw new GitHubError(502, "GitHub saved the file but returned incomplete information. Reload before saving again.");
+    written = { key: editRevision(context, result.content.sha), raw, revision: result.content.sha, updatedAt: commitDate(result.commit) };
+    return written;
+  }
+
+  // The engine refuses every run while profile.json has `setup_required`; models being saved finishes setup.
+  async function finishSetup(context) {
+    const previous = await read(context);
+    if (!previous.raw.setup_required) return;
+    const raw = structuredClone(previous.raw);
+    delete raw.setup_required;
+    await write(context, previous, raw, "Issue Scout: finish setup");
+  }
+
+  return { finishSetup, routes: {
     "GET /api/profile": async () => {
       const context = await repositoryContext();
       const value = await read(context);
@@ -207,5 +216,5 @@ export function createProfileRoutes({ repositoryContext, fetchImpl }) {
         };
       })];
     },
-  };
+  } };
 }

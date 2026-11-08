@@ -18,6 +18,13 @@ beforeEach(() => {
   vi.spyOn(api, "profile").mockResolvedValue(structuredClone(profile));
   vi.spyOn(api, "profileHistory").mockResolvedValue([]);
   vi.spyOn(api, "scoutSettings").mockResolvedValue(structuredClone(settings));
+  vi.spyOn(api, "models").mockResolvedValue({
+    providers: [
+      { id: "groq", label: "Groq", credentials: { "api-key": "GROQ_API_KEY" }, model: "optional", model_hint: "" },
+      { id: "claude-code", label: "Claude Code", credentials: { subscription: "CLAUDE_CODE_OAUTH_TOKEN" }, model: "optional", model_hint: "" },
+    ],
+    secrets: [], picker: { provider: "groq", auth: "api-key", model: "", base_url: "" }, solver: { provider: "claude-code", auth: "subscription", model: "", base_url: "" },
+  });
 });
 
 it("opens the profile editor for a connected desktop account", async () => {

@@ -6,6 +6,8 @@ import type {
   Feedback,
   Job,
   Me,
+  ModelSettings,
+  ModelStageUpdate,
   Profile,
   ProfileChange,
   Project,
@@ -90,6 +92,9 @@ export const api = {
         window.dispatchEvent(new Event("issue-scout:account-changed"));
       return value;
     }),
+  models: () => request<ModelSettings>("/api/models"),
+  saveModels: (models: { picker: ModelStageUpdate; solver: ModelStageUpdate }) =>
+    request<ModelSettings>("/api/models", { method: "PUT", body: JSON.stringify(models) }),
   scoutSettings: () => request<ScoutSettings>("/api/scout/settings"),
   saveScoutSettings: (settings: ScoutSettings) =>
     request<ScoutSettings>("/api/scout/settings", {
