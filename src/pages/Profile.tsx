@@ -10,12 +10,12 @@ import {
   UnlockKeyhole,
   X,
 } from "lucide-react";
-import { api } from "../api";
+import { api, isMock } from "../api";
 import { ApiError, errorMessage } from "../errors";
 import type { Language, Profile as ProfileType, ProfileChange } from "../types";
 import { dateTime, languageNames } from "../utils";
 import { profileErrors } from "../validation";
-import { ErrorState, External, Loading, useResource } from "../components/ui";
+import { ErrorState, External, ListField, Loading, fieldErrors, joinList, parseList, useResource } from "../components/ui";
 
 export default function Profile() {
   const resource = useResource(() => api.profile());
@@ -24,27 +24,29 @@ export default function Profile() {
   ) : resource.error ? (
     <ErrorState message={resource.error} retry={resource.reload} />
   ) : resource.data ? (
-    <ProfileEditor initial={resource.data} />
+    <ProfileEditor initial={resource.data} onReload={resource.reload} />
   ) : null;
 }
-function ProfileEditor({ initial }: { initial: ProfileType }) {
+function ProfileEditor({ initial, onReload }: { initial: ProfileType; onReload: () => void }) {
   const [saved, setSaved] = useState(initial);
   const [draft, setDraft] = useState<ProfileType>(structuredClone(initial));
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [conflict, setConflict] = useState(false);
   const [fields, setFields] = useState<Record<string, string>>({});
   const [watchText, setWatchText] = useState(initial.watchlist.join("\n"));
   const [excludedText, setExcludedText] = useState(
-    initial.scouting.exclude_labels.join(", "),
+    joinList(initial.scouting.exclude_labels),
   );
   const history = useResource(() => api.profileHistory());
   const value = editing ? draft : saved;
   function begin() {
+    setConflict(false);
     setDraft(structuredClone(saved));
     setWatchText(saved.watchlist.join("\n"));
-    setExcludedText(saved.scouting.exclude_labels.join(", "));
+    setExcludedText(joinList(saved.scouting.exclude_labels));
     setEditing(true);
     setNotice("");
     setFields({});
@@ -58,6 +60,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
   }
   async function save(event: React.FormEvent) {
     event.preventDefault();
+    setConflict(false);
     const outgoing = {
       ...draft,
       watchlist: watchText
@@ -66,10 +69,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
         .filter(Boolean),
       scouting: {
         ...draft.scouting,
-        exclude_labels: excludedText
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
+        exclude_labels: parseList(excludedText),
       },
     };
     const invalid = profileErrors(outgoing);
@@ -91,19 +91,13 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
       history.reload();
     } catch (error) {
       setError(errorMessage(error));
+      setConflict(error instanceof ApiError && error.status === 409);
       if (error instanceof ApiError) setFields(error.fields);
     } finally {
       setBusy(false);
     }
   }
-  const fieldError = (path: string) =>
-    Object.entries(fields)
-      .filter(([key]) => key === path || key.startsWith(`${path}.`))
-      .map(([key, message]) => (
-        <span className="field-error" role="alert" key={key}>
-          {message}
-        </span>
-      ));
+  const fieldError = (path: string) => fieldErrors(fields, path);
   return (
     <>
       <div className="page-heading">
@@ -112,7 +106,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
           <h1>
             Your profile, in your hands<span className="green-text">.</span>
           </h1>
-          <p>See what we know, where it came from, and make it your own.</p>
+          <p>{isMock ? "See what we know, where it came from, and make it your own." : "Your skills and preferences, saved in your private Scout repository."}</p>
         </div>
         {!editing && (
           <button className="button secondary" onClick={begin}>
@@ -159,8 +153,9 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
               <section className="panel profile-section">
                 <h2>Skills & experience</h2>
                 <p className="section-description">
-                  A source for every skill. A lock for the ones you want to
-                  keep.
+                  {isMock
+                    ? "A source for every skill. A lock for the ones you want to keep."
+                    : "The skills your scout matches against open issues."}
                 </p>
                 <div className="sourced-list">
                   {value.skills.map((skill, index) => (
@@ -201,7 +196,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
                         <Sources values={skill.sources} />
                       </div>
                       <div className="source-actions">
-                        {skill.locked && (
+                        {isMock && skill.locked && (
                           <span className="locked-label">
                             <LockKeyhole size={12} />
                             Locked
@@ -209,7 +204,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
                         )}
                         {editing && (
                           <>
-                            <button
+                            {isMock && <button
                               type="button"
                               className="icon-button"
                               aria-label={`${skill.locked ? "Allow automatic updates for" : "Lock"} skill ${index + 1}`}
@@ -234,7 +229,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
                               ) : (
                                 <LockKeyhole size={15} />
                               )}
-                            </button>
+                            </button>}
                             <button
                               type="button"
                               className="icon-button"
@@ -333,7 +328,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
                         <Sources values={language.sources} />
                       </div>
                       <div className="source-actions">
-                        {language.locked && (
+                        {isMock && language.locked && (
                           <span className="locked-label">
                             <LockKeyhole size={12} />
                             Locked
@@ -341,7 +336,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
                         )}
                         {editing && (
                           <>
-                            <button
+                            {isMock && <button
                               type="button"
                               className="icon-button"
                               aria-label={`${language.locked ? "Allow automatic updates for" : "Lock"} language ${index + 1}`}
@@ -362,7 +357,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
                               ) : (
                                 <LockKeyhole size={15} />
                               )}
-                            </button>
+                            </button>}
                             <button
                               type="button"
                               className="icon-button"
@@ -571,14 +566,9 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
                   <span>Look beyond my watchlist</span>
                 </label>
                 {editing ? (
-                  <label className="field">
-                    <span>Exclude labels · separated by commas</span>
-                    <input
-                      value={excludedText}
-                      onChange={(event) => setExcludedText(event.target.value)}
-                    />
+                  <ListField label="Exclude labels" value={excludedText} onChange={setExcludedText}>
                     {fieldError("scouting.exclude_labels")}
-                  </label>
+                  </ListField>
                 ) : (
                   <div className="field">
                     <span>Excluded labels</span>
@@ -602,9 +592,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
                 <LockKeyhole size={20} />
                 <h3>You have the final say.</h3>
                 <p>
-                  Editing a skill or language locks it. Automatic updates won’t
-                  overwrite locked items. You can allow updates again at any
-                  time.
+                  {isMock ? "Editing a skill or language locks it. Automatic updates won’t overwrite locked items. You can allow updates again at any time." : "Your changes are saved in your private Scout repository and recorded as GitHub commits."}
                 </p>
                 <p className="field-hint">
                   Last updated {dateTime(saved.updated_at)}
@@ -616,7 +604,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
                   <h2>Profile change history</h2>
                 </div>
                 <p className="section-description">
-                  What changed, when, and why.
+                  {isMock ? "What changed, when, and why." : "The latest 30 profile commits. Open a commit to see its changes."}
                 </p>
                 {history.loading ? (
                   <Loading label="Loading changes…" />
@@ -639,6 +627,7 @@ function ProfileEditor({ initial }: { initial: ProfileType }) {
           {editing && (
             <div className="save-bar">
               {error && <ErrorState message={error} />}
+              {conflict && <button type="button" className="button secondary" onClick={onReload}>Reload latest profile</button>}
               <span>Changes are saved only when you’re ready.</span>
               <div>
                 <button
@@ -685,7 +674,7 @@ function Change({ change }: { change: ProfileChange }) {
       </div>
       <strong>{change.field.replaceAll("_", " ")} updated</strong>
       {change.note && <p>{change.note}</p>}
-      <details>
+      {change.commit_url ? <External href={change.commit_url}>View changes on GitHub</External> : <details>
         <summary>See change</summary>
         <div className="change-values">
           <span>Before</span>
@@ -693,7 +682,7 @@ function Change({ change }: { change: ProfileChange }) {
           <span>After</span>
           <pre>{JSON.stringify(change.after, null, 2)}</pre>
         </div>
-      </details>
+      </details>}
     </li>
   );
 }

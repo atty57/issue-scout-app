@@ -11,7 +11,7 @@ import {
 import { api, isMock } from "../api";
 import { ApiError, errorMessage } from "../errors";
 import type { Connection, ScoutSettings as ScoutSettingsType } from "../types";
-import { ErrorState, Loading, useResource } from "../components/ui";
+import { ErrorState, ListField, Loading, fieldErrors, joinList, parseList, useResource } from "../components/ui";
 
 const countFields: [keyof ScoutSettingsType, string, string][] = [
   [
@@ -67,36 +67,33 @@ export default function ScoutSettings() {
   ) : resource.error ? (
     <ErrorState message={resource.error} retry={resource.reload} />
   ) : resource.data ? (
-    <Editor initial={resource.data} />
+    <Editor initial={resource.data} onReload={resource.reload} />
   ) : null;
 }
-function Editor({ initial }: { initial: ScoutSettingsType }) {
+function Editor({ initial, onReload }: { initial: ScoutSettingsType; onReload: () => void }) {
   const [draft, setDraft] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [conflict, setConflict] = useState(false);
   const [fields, setFields] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
   const [aliases, setAliases] = useState(
     JSON.stringify(initial.skill_aliases, null, 2),
   );
-  const [labels, setLabels] = useState(initial.labels.join(", "));
+  const [labels, setLabels] = useState(joinList(initial.labels));
   const [docsLabels, setDocsLabels] = useState(
-    initial.documentation_labels.join(", "),
+    joinList(initial.documentation_labels),
   );
-  const connections = useResource(() => api.connections());
+  const connections = useResource(() => isMock ? api.connections() : Promise.resolve<Connection[]>([]));
   const update = (key: keyof ScoutSettingsType, value: unknown) => {
     setDraft((previous) => ({ ...previous, [key]: value }));
     setNotice("");
   };
-  const fieldError = (key: string) =>
-    fields[key] ? (
-      <span className="field-error" role="alert">
-        {fields[key]}
-      </span>
-    ) : null;
+  const fieldError = (key: string) => fieldErrors(fields, key);
   async function save(event: React.FormEvent) {
     event.preventDefault();
     setError("");
+    setConflict(false);
     setNotice("");
     const invalid: Record<string, string> = {};
     let skillAliases: Record<string, string[]> = {};
@@ -149,14 +146,8 @@ function Editor({ initial }: { initial: ScoutSettingsType }) {
       const result = await api.saveScoutSettings({
         ...draft,
         skill_aliases: skillAliases,
-        labels: labels
-          .split(",")
-          .map((value) => value.trim())
-          .filter(Boolean),
-        documentation_labels: docsLabels
-          .split(",")
-          .map((value) => value.trim())
-          .filter(Boolean),
+        labels: parseList(labels),
+        documentation_labels: parseList(docsLabels),
       });
       setDraft(result);
       setNotice(
@@ -166,6 +157,7 @@ function Editor({ initial }: { initial: ScoutSettingsType }) {
       );
     } catch (error) {
       setError(errorMessage(error));
+      setConflict(error instanceof ApiError && error.status === 409);
       if (error instanceof ApiError) setFields(error.fields);
     } finally {
       setBusy(false);
@@ -192,8 +184,7 @@ function Editor({ initial }: { initial: ScoutSettingsType }) {
             A scout that works your way<span className="green-text">.</span>
           </h1>
           <p>
-            Personal discovery, draft fixes, validation, scheduling, and
-            delivery.
+            {isMock ? "Personal discovery, draft fixes, validation, scheduling, and delivery." : "Tune issue discovery, matching, and search budgets."}
           </p>
         </div>
         <a className="button secondary" href="#/profile">
@@ -207,10 +198,10 @@ function Editor({ initial }: { initial: ScoutSettingsType }) {
           {notice}
         </div>
       )}
-      <section className="panel profile-section connections-panel">
+      {isMock && <section className="panel profile-section connections-panel">
         <div className="section-heading">
           <h2>Connections</h2>
-          {isMock && <span className="badge">Demo connections</span>}
+          <span className="badge">Demo connections</span>
         </div>
         <p className="section-description">
           Your account’s services power your scouts. Credentials are managed by
@@ -235,33 +226,24 @@ function Editor({ initial }: { initial: ScoutSettingsType }) {
               >
                 {connection.connected ? "Connected" : "Not connected"}
               </span>
-              {connection.id !== "github" &&
-                (isMock ? (
-                  <button
-                    className="text-button"
-                    disabled={busy}
-                    onClick={() => void toggle(connection)}
-                  >
-                    {connection.connected ? "Disconnect demo" : "Connect demo"}
-                  </button>
-                ) : (
-                  <a
-                    className="text-button"
-                    href={api.connectionUrl(connection.id)}
-                  >
-                    {connection.connected ? "Manage" : "Connect"}
-                    <ArrowUpRight size={13} />
-                  </a>
-                ))}
+              {connection.id !== "github" && (
+                <button
+                  className="text-button"
+                  disabled={busy}
+                  onClick={() => void toggle(connection)}
+                >
+                  {connection.connected ? "Disconnect demo" : "Connect demo"}
+                </button>
+              )}
             </div>
           ))
         )}
-      </section>
+      </section>}
       <form onSubmit={save} noValidate>
         <fieldset disabled={busy}>
           <div className="scout-settings-layout">
             <div className="profile-main">
-              <section className="panel profile-section">
+              {isMock && <section className="panel profile-section">
                 <h2>Your daily scout</h2>
                 <p className="section-description">
                   Choose when to run and how far the workflow should go.
@@ -330,8 +312,8 @@ function Editor({ initial }: { initial: ScoutSettingsType }) {
                   When off, your scout finishes after discovering and checking
                   an issue. Every drafted contribution still needs your review.
                 </p>
-              </section>
-              <section className="panel profile-section">
+              </section>}
+              {isMock && <section className="panel profile-section">
                 <h2>Delivery & tracing</h2>
                 <p className="section-description">
                   Reports are always saved in your workspace. Email is optional.
@@ -372,35 +354,19 @@ function Editor({ initial }: { initial: ScoutSettingsType }) {
                   Connect email or tracing above before enabling it. A delivery
                   failure keeps your saved report and does not rerun the fix.
                 </p>
-              </section>
+              </section>}
               <section className="panel profile-section">
                 <h2>Discovery signals</h2>
                 <p className="section-description">
                   Help your scout recognize relevant issues and related skill
                   names.
                 </p>
-                <label className="field">
-                  <span>Code issue labels · comma separated</span>
-                  <input
-                    value={labels}
-                    onChange={(event) => {
-                      setLabels(event.target.value);
-                      setNotice("");
-                    }}
-                  />
+                <ListField label="Code issue labels" value={labels} onChange={(value) => { setLabels(value); setNotice(""); }}>
                   {fieldError("labels")}
-                </label>
-                <label className="field">
-                  <span>Documentation labels · comma separated</span>
-                  <input
-                    value={docsLabels}
-                    onChange={(event) => {
-                      setDocsLabels(event.target.value);
-                      setNotice("");
-                    }}
-                  />
+                </ListField>
+                <ListField label="Documentation labels" value={docsLabels} onChange={(value) => { setDocsLabels(value); setNotice(""); }}>
                   {fieldError("documentation_labels")}
-                </label>
+                </ListField>
                 <label className="field">
                   <span>Skill aliases · JSON</span>
                   <textarea
@@ -494,8 +460,7 @@ function Editor({ initial }: { initial: ScoutSettingsType }) {
               <ShieldCheck size={22} />
               <h3>Personal to your account.</h3>
               <p>
-                Your resume, GitHub projects, profile, run history, and delivery
-                settings belong to your workspace.
+                {isMock ? "Your resume, GitHub projects, profile, run history, and delivery settings belong to your workspace." : "Your profile and scouting preferences are saved in your private GitHub repository."}
               </p>
               <h3>Supported contributions</h3>
               <p>
@@ -520,6 +485,7 @@ function Editor({ initial }: { initial: ScoutSettingsType }) {
           </div>
           <div className="save-bar">
             {error && <ErrorState message={error} />}
+            {conflict && <button type="button" className="button secondary" onClick={onReload}>Reload latest settings</button>}
             <span>Applies to your account’s future scouts.</span>
             <div>
               <button className="button primary" type="submit">

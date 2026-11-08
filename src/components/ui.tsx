@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
-import { api } from "../api";
+import { api, isMock } from "../api";
 import { errorMessage } from "../errors";
 import type { Job } from "../types";
 import { safeHttps } from "../utils";
@@ -82,6 +82,62 @@ export function External({
     <span className={className}>{children}</span>
   );
 }
+// GitHub profile picture. Shows children instead when there is no URL or the image fails to load
+// (the page's content policy only allows avatars.githubusercontent.com).
+export function Avatar({
+  url,
+  alt = "",
+  children,
+}: {
+  url?: string;
+  alt?: string;
+  children: React.ReactNode;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (!url || failed) return <>{children}</>;
+  return <img className="avatar-img" src={url} alt={alt} onError={() => setFailed(true)} />;
+}
+
+// Label lists: comma separated in the demo (as on the web), one per line on desktop so a label may
+// contain a comma. Always trimmed, because the engine matches labels exactly.
+export const joinList = (items: string[]) => items.join(isMock ? ", " : "\n");
+export const parseList = (text: string) =>
+  text.split(isMock ? "," : "\n").map((item) => item.trim()).filter(Boolean);
+
+export function ListField({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    <label className="field">
+      <span>{label} · {isMock ? "comma separated" : "one per line"}</span>
+      {isMock ? (
+        <input value={value} onChange={(event) => onChange(event.target.value)} />
+      ) : (
+        <textarea rows={3} value={value} onChange={(event) => onChange(event.target.value)} />
+      )}
+      {children}
+    </label>
+  );
+}
+
+// Errors from a 422 response for one field and anything nested under it.
+export const fieldErrors = (fields: Record<string, string>, path: string) =>
+  Object.entries(fields)
+    .filter(([key]) => key === path || key.startsWith(`${path}.`))
+    .map(([key, message]) => (
+      <span className="field-error" role="alert" key={key}>
+        {message}
+      </span>
+    ));
+
 export function Markdown({ children }: { children: string }) {
   return (
     <div className="markdown">

@@ -4,6 +4,6 @@ interface Window {
       route: string,
       method: string,
       body?: unknown,
-    ): Promise<[number, { error?: string; fields?: Record<string, string> }?]>;
+    ): Promise<[number, { error?: string; fields?: Record<string, string>; reconnect?: boolean }?]>;
   };
 }

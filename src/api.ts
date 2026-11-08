@@ -9,6 +9,7 @@ import type {
   Profile,
   ProfileChange,
   Project,
+  RepositorySetup,
   Run,
   ScoutSettings,
   Suggestion,
@@ -30,6 +31,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     body,
   );
   if (status === 204) return undefined as T;
+  // The Scout repository was renamed, moved or replaced: reload the account so the app reopens repository setup.
+  if (status >= 400 && payload.reconnect)
+    window.dispatchEvent(new Event("issue-scout:account-changed"));
   if (status >= 400)
     throw new ApiError(
       status,
@@ -40,6 +44,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 export const api = {
   me: () => request<Me>("/api/me"),
+  setupRepository: (setup: RepositorySetup) =>
+    request<Me>("/api/repository", { method: "POST", body: JSON.stringify(setup) }),
   startLogin: () =>
     request<{ user_code: string; verification_uri: string }>("/auth/device", {
       method: "POST",
@@ -91,8 +97,6 @@ export const api = {
       body: JSON.stringify(settings),
     }),
   connections: () => request<Connection[]>("/api/connections"),
-  connectionUrl: (id: string) =>
-    `${base}/auth/connections/${encodeURIComponent(id)}`,
   demoToggleConnection: (id: string) =>
     request<Connection>(`/api/connections/${encodeURIComponent(id)}`, {
       method: "POST",

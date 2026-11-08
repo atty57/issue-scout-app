@@ -10,7 +10,7 @@ import {
 import { api } from "../api";
 import { errorMessage } from "../errors";
 import type { Me } from "../types";
-import { ErrorState } from "../components/ui";
+import { Avatar, ErrorState } from "../components/ui";
 import { ResumeUpload } from "./Onboarding";
 
 export default function Settings({
@@ -73,7 +73,9 @@ export default function Settings({
             <h2>Connected account</h2>
             <div className="account-row">
               <span className="github-avatar">
-                <Github size={25} />
+                <Avatar url={me.avatar_url}>
+                  <Github size={25} />
+                </Avatar>
               </span>
               <div>
                 <strong>@{me.login}</strong>

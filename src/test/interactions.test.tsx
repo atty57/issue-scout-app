@@ -5,7 +5,7 @@ import { api } from "../api";
 import { resetMock } from "../mock/server";
 import { initialSuggestions } from "../mock/data";
 import { SuggestionCard } from "../components/SuggestionCard";
-import { JobProgress, Markdown } from "../components/ui";
+import { Avatar, JobProgress, Markdown } from "../components/ui";
 import Feed from "../pages/Feed";
 import Profile from "../pages/Profile";
 import { ResumeUpload } from "../pages/Onboarding";
@@ -251,4 +251,11 @@ describe("untrusted issue content", () => {
     expect(screen.getByText("scope (penalty)")).toBeInTheDocument();
     expect(screen.getByText("-2")).toBeInTheDocument();
   });
+});
+
+it("shows the GitHub avatar and falls back when it fails to load", () => {
+  render(<Avatar url="https://avatars.githubusercontent.com/u/7" alt="octocat">O</Avatar>);
+  fireEvent.error(screen.getByRole("img", { name: "octocat" }));
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  expect(screen.getByText("O")).toBeInTheDocument();
 });

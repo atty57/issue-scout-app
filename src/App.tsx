@@ -21,10 +21,11 @@ import {
 import { api, isMock } from "./api";
 import { ApiError, errorMessage } from "./errors";
 import type { DemoScenario, Me } from "./types";
-import { ErrorState, JobProgress, Loading, Logo } from "./components/ui";
+import { Avatar, ErrorState, JobProgress, Loading, Logo } from "./components/ui";
 import Feed from "./pages/Feed";
 import HistoryPage from "./pages/History";
 import Onboarding from "./pages/Onboarding";
+import RepositoryOnboarding from "./pages/RepositoryOnboarding";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Runs from "./pages/Runs";
@@ -98,7 +99,7 @@ export default function App() {
     api
       .me()
       .then((value) => {
-        if (active) setMe(value);
+        if (active) signedIn(value);
       })
       .catch((error) => {
         if (!active) return;
@@ -118,6 +119,10 @@ export default function App() {
     setMe(null);
     lastUpload.current = undefined;
     window.location.hash = "/";
+  }
+  function signedIn(value: Me) {
+    setMe(value);
+    if (!isMock && value.repository && currentRoute() === "/") window.location.hash = "/profile";
   }
   function uploaded(id: string, file?: File) {
     lastUpload.current = { file };
@@ -190,10 +195,16 @@ export default function App() {
       <div className="startup">
         <Logo />
         {error ? (
-          <ErrorState
-            message={error}
-            retry={() => setRevision((value) => value + 1)}
-          />
+          <>
+            <ErrorState
+              message={error}
+              retry={() => setRevision((value) => value + 1)}
+            />
+            {/* A persistent startup failure must not trap the user: let them sign out and start over. */}
+            <button className="text-button" onClick={() => void api.logout().finally(signedOut)}>
+              Sign out
+            </button>
+          </>
         ) : (
           <Loading />
         )}
@@ -240,7 +251,7 @@ export default function App() {
               </button>
             ) : (
               <DesktopSignIn
-                onSignedIn={setMe}
+                onSignedIn={signedIn}
                 onError={(error) => setError(errorMessage(error))}
               />
             )}
@@ -362,11 +373,13 @@ export default function App() {
           </a>
           <div className="sidebar-account">
             <span className="account-avatar">
-              <Github size={19} />
+              <Avatar url={me.avatar_url}>
+                <Github size={19} />
+              </Avatar>
             </span>
             <div>
               <strong>{me.login}</strong>
-              <span>Personal workspace</span>
+              <span title={me.repository?.full_name}>{me.repository?.full_name || "Personal workspace"}</span>
             </div>
             <button
               className="icon-button"
@@ -406,7 +419,9 @@ export default function App() {
             {themeButton}
             <span className="topbar-divider" />
             <span className="small-avatar" title={`Connected as ${me.login}`}>
-              {me.login.slice(0, 1).toUpperCase()}
+              <Avatar url={me.avatar_url} alt={`Connected as ${me.login}`}>
+                {me.login.slice(0, 1).toUpperCase()}
+              </Avatar>
             </span>
           </div>
         </header>
@@ -417,7 +432,9 @@ export default function App() {
           key={revision}
         >
           {error && <ErrorState message={error} retry={() => setError("")} />}
-          {me.onboarding === "needs_resume" ? (
+          {me.onboarding === "needs_repository" ? (
+            <RepositoryOnboarding me={me} onConnected={(value) => { setMe(value); window.location.hash = "/profile"; }} />
+          ) : me.onboarding === "needs_resume" ? (
             <Onboarding me={me} onUploaded={uploaded} />
           ) : me.onboarding === "building" ? (
             <div className="build-container">

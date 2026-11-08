@@ -1,8 +1,14 @@
 export type Language = "python" | "javascript" | "typescript" | "csharp" | "c";
+export type ScoutRepository = { id: number; full_name: string; html_url: string };
+export type RepositorySetup =
+  | { mode: "create"; name: string }
+  | { mode: "connect"; repo: string };
 export type Me = {
   login: string;
   avatar_url: string;
-  onboarding: "needs_resume" | "building" | "ready";
+  onboarding: "needs_repository" | "needs_resume" | "building" | "ready";
+  repository?: ScoutRepository;
+  repository_error?: string;
   job_id?: string;
 };
 export type Job = {
@@ -17,6 +23,7 @@ export type Job = {
 };
 export type Sourced<T> = { value: T; sources: string[]; locked: boolean };
 export type Profile = {
+  revision?: string;
   summary: string;
   skills: Sourced<string>[];
   languages: Sourced<Language>[];
@@ -35,8 +42,9 @@ export type ProfileChange = {
   at: string;
   source: "resume" | "github" | "feedback" | "user";
   field: string;
-  before: unknown;
-  after: unknown;
+  before?: unknown;
+  after?: unknown;
+  commit_url?: string;
   note?: string;
 };
 export type FeedbackReason =
@@ -116,6 +124,7 @@ export type Project = {
   topics: string[];
 };
 export type ScoutSettings = {
+  revision?: string;
   days: number;
   updated_days: number;
   search_pages: number;
