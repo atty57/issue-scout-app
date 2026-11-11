@@ -3,6 +3,7 @@
   "productName": "Issue Scout",
   "description": "Desktop control plane for your private Issue Scout repository",
   "author": "atty57",
+  "license": "MIT",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -11,7 +12,8 @@
     "build": "tsc -b && vite build",
     "start": "npm run build && electron .",
     "test": "vitest run",
-    "dist:win": "npm run build && electron-builder --win nsis --x64 --publish never"
+    "dist:win": "npm run build && electron-builder --win nsis --x64 --publish never",
+    "dist:win:signed": "powershell -NoProfile -File scripts/build-signed-windows.ps1"
   },
   "dependencies": {
     "libsodium-wrappers": "0.8.4",
@@ -52,6 +54,7 @@
       "electron/*.js",
       "electron/preload.cjs",
       "electron/icon.png",
+      "LICENSE",
       "THIRD_PARTY_NOTICES.md",
       "!electron/*.test.js",
       "!electron/zip-fixture.js"

@@ -25,7 +25,7 @@ An allow-list in `build.files` puts exactly these into `app.asar`:
 - `dist/`: the production renderer from `npm run build`.
 - `electron/*.js` and `electron/preload.cjs`: main process and preload, without `*.test.js` or `zip-fixture.js`.
 - `package.json`. electron-builder writes a trimmed copy without `devDependencies` or the build config.
-- `electron/icon.png` and `THIRD_PARTY_NOTICES.md`, including Beautiful UI's MIT attribution.
+- `electron/icon.png`, the app's MIT `LICENSE` and `THIRD_PARTY_NOTICES.md`, including Beautiful UI's MIT attribution.
 - Runtime dependencies of the main process only: `libsodium-wrappers` (with `libsodium`) and `yaml`. Renderer
   libraries are dev dependencies because Vite bundles them into `dist/`.
 
@@ -91,10 +91,16 @@ All 19 checked packaged source/assets match the current build, the Beautiful UI 
 and the configured security fuses were read back successfully. This does not replace the install/uninstall
 and native-window checks above. See `out/redesign/evidence.json` and `package-check.json` for local details.
 
-## Signing (required before public distribution)
+## Signing options
+
+Signing is recommended for public distribution, but GitHub Releases does not require it. Open-source status
+does not exempt an executable from Windows publisher/reputation checks. An unsigned beta can be shared with
+an explicit warning in its release notes; Windows can warn or block installation, especially on managed computers.
+Signing verifies publisher/integrity and does not guarantee immediate SmartScreen reputation. See
+[Microsoft's signing options](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options).
 
 The 0.1.0 build is **unsigned**. Windows shows "Windows protected your PC" (SmartScreen) and "Unknown publisher" for
-an unsigned installer downloaded from the internet. Before public releases:
+an unsigned installer downloaded from the internet. Before a signed release:
 
 - **Certificate.** Use an Authenticode code-signing certificate issued to the publisher, or a managed service such
   as Microsoft's Trusted Signing (now called Artifact Signing), if the publisher is eligible. Since June 2023, publicly
@@ -108,6 +114,53 @@ an unsigned installer downloaded from the internet. Before public releases:
 - **Timestamping.** Keep the signing service's timestamp, so signatures stay valid after the certificate expires.
 - **Reputation.** SmartScreen trust builds as signed downloads accumulate. Check Microsoft's current guidance on how
   certificate type affects this.
+
+### Optional signed build tooling (electron-builder 26.x)
+
+The existing `npm run dist:win` remains the unsigned local test build in `release/`.
+For signing, configure a provider, then run:
+
+```powershell
+npm run dist:win:signed -- -ExpectedPublisher "Exact verified publisher name"
+```
+
+This runs tests/build, enforces `forceCodeSigning`, writes to the separate ignored `release-signed/` directory,
+and never publishes. The post-build verifier requires valid Authenticode signatures from the expected publisher
+and timestamps on the installer, app and elevation helper. After installing that exact signed build in a test
+environment, verify its embedded uninstaller and matching app archive:
+
+```powershell
+powershell -NoProfile -File scripts/verify-windows-release.ps1 -ExpectedPublisher "Exact verified publisher name" -ArtifactDirectory release-signed -InstalledDirectory "$env:LOCALAPPDATA\Programs\issue-scout-app"
+```
+
+Only this full verification creates `SHA256SUMS.txt` and `release-manifest.json`. Actual trusted signing and the
+successful verification path remain untested until a provider is configured; the current unsigned installer is
+correctly rejected by the verifier.
+
+For Microsoft Artifact Signing, `build/electron-builder.azure.cjs` is a v26 overlay. Set the public
+`ISSUE_SCOUT_SIGNING_PUBLISHER`, `ISSUE_SCOUT_SIGNING_ENDPOINT`, `ISSUE_SCOUT_SIGNING_ACCOUNT` and
+`ISSUE_SCOUT_SIGNING_PROFILE` environment values from your validated account, supply Azure authentication
+privately through the provider's supported environment credentials, then add
+`-SigningConfig build/electron-builder.azure.cjs` to the signed-build command. Do not send credentials in chat.
+Use a Public Trust profile for public downloads. Eligibility depends on country and publisher type; account
+creation can start billing, so select a provider before provisioning anything. No signing service is enrolled yet.
+
+### Public downloads
+
+Published 2026-11-11: `atty57/issue-scout-app` is public and the unsigned Windows beta is available as
+[v0.1.0](https://github.com/atty57/issue-scout-app/releases/tag/v0.1.0). End users do not need a GitHub account to
+download a public release; GitHub sign-in happens inside the app for their own Scout repository.
+
+Before publishing: choose signed release or explicitly unsigned beta, commit the release tooling, build from the
+tested commit, complete installer checks, then prepare a draft release with the installer and its SHA-256 checksum.
+Keep unsigned-beta checksums separate from the signed verifier's manifest. An unsigned beta must identify itself
+as unsigned and must not claim a verified publisher or guaranteed Windows trust. For signed builds, use the
+verified assets from `release-signed/`. For an unsigned beta, use the tested assets from `release/`.
+
+The generic local notes template is in `out/distribution/release-notes.md`; the published beta notes are in
+`out/distribution/beta-notes.md`. The beta contains the tested installer and checksum, marked prerelease.
+Publish only after reviewing the selected assets and notes. Do not attach `win-unpacked/`, local profiles or logs.
+After publication, link the README to the actual release; do not advertise a nonexistent latest installer.
 
 ## Updates (initial strategy)
 

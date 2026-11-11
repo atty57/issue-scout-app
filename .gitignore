@@ -5,3 +5,4 @@ out/
 .env.*
 *.tsbuildinfo
 release/
+release-signed/
