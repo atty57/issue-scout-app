@@ -44,6 +44,15 @@ it("colors the window's title bar for the light or dark theme only, without need
   expect(setWindowTheme.mock.calls).toEqual([["dark"]]);
 });
 
+it("preserves GitHub's retry delay in the IPC error payload", async () => {
+  fetchImpl.mockResolvedValue(new Response("{}", { status: 403, headers: { "retry-after": "120" } }));
+  const [status, payload] = await backend("/api/me");
+  expect(status).toBe(429);
+  expect(payload.retryAfter).toBe(120);
+  expect(payload.error).toContain("request limit");
+  expect(JSON.stringify(payload)).not.toContain(token);
+});
+
 it("sends a signed-in user without a saved repository to desktop onboarding", async () => {
   expect(await backend("/api/me")).toEqual([200, { login: user.login, avatar_url: user.avatar_url, onboarding: "needs_repository" }]);
 });

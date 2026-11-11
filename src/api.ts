@@ -45,6 +45,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       status,
       payload.error || "The request could not be completed.",
       payload.fields,
+      typeof payload.retryAfter === "number" && Number.isFinite(payload.retryAfter) && payload.retryAfter > 0 ? payload.retryAfter : 0,
     );
   return payload as T;
 }

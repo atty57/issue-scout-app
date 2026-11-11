@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { api } from "../api";
 import Runs from "../pages/Runs";
 import type { Run } from "../types";
+import { ApiError } from "../errors";
 
 vi.mock("../api", async (original) => ({ ...(await original<typeof import("../api")>()), isMock: false }));
 afterEach(() => vi.useRealTimers());
@@ -32,6 +33,27 @@ it("refreshes the run list while a run is active, then re-enables Run", async ()
   expect(screen.getByRole("button", { name: "Run full scout" })).toBeEnabled();
   await act(() => vi.advanceTimersByTimeAsync(10000));
   expect(list).toHaveBeenCalledTimes(2); // stops polling once nothing is running
+});
+
+it("keeps the active run list but pauses refreshes for GitHub's rate-limit delay", async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const list = vi.spyOn(api, "runs").mockResolvedValueOnce([listed("running")])
+    .mockRejectedValueOnce(new ApiError(429, "Rate limited", {}, 120))
+    .mockRejectedValueOnce(new ApiError(503, "Temporary outage"))
+    .mockResolvedValue([listed("completed")]);
+  render(<Runs />);
+  await screen.findByText("running");
+  await act(() => vi.advanceTimersByTimeAsync(5000));
+  expect(screen.getByText("Rate limited")).toBeInTheDocument();
+  expect(screen.getByText("running")).toBeInTheDocument();
+  await act(() => vi.advanceTimersByTimeAsync(119000));
+  expect(list).toHaveBeenCalledTimes(2);
+  await act(() => vi.advanceTimersByTimeAsync(1000));
+  expect(list).toHaveBeenCalledTimes(3);
+  await act(() => vi.advanceTimersByTimeAsync(5000));
+  expect(list).toHaveBeenCalledTimes(4);
+  expect(screen.queryByText("Rate limited")).not.toBeInTheDocument();
+  expect(screen.getByText("completed")).toBeInTheDocument();
 });
 
 it("waits for GitHub to list an accepted run instead of offering another start", async () => {
@@ -75,6 +97,92 @@ it("stops refreshing when you leave the list or a run", async () => {
   view.unmount(); // leave the page
   await vi.advanceTimersByTimeAsync(30000);
   expect(list).toHaveBeenCalledTimes(1);
+  expect(detail).toHaveBeenCalledTimes(1);
+});
+
+it.each(["running", "resending"])("recovers %s updates after temporary refresh failures", async (state) => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const current: Run = state === "running" ? listed("running")
+    : { ...listed("completed"), delivery: { status: "resending", message: "Sending the saved report again." } };
+  const detail = vi.spyOn(api, "run").mockResolvedValueOnce(current)
+    .mockRejectedValueOnce(new Error("Temporary network failure"))
+    .mockRejectedValueOnce(new ApiError(503, "GitHub is unavailable"))
+    .mockResolvedValue({ ...listed("completed"), delivery: { status: "sent", message: "Your report was emailed." } });
+  render(<Runs id="9" />);
+  await act(() => vi.advanceTimersByTimeAsync(0));
+  await act(() => vi.advanceTimersByTimeAsync(state === "running" ? 2000 : 5000));
+  expect(screen.getByText("Temporary network failure")).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: state === "running" ? "Scout running" : "Scout completed" })).toBeInTheDocument();
+  await act(() => vi.advanceTimersByTimeAsync(5000));
+  expect(screen.getByText("GitHub is unavailable")).toBeInTheDocument();
+  await act(() => vi.advanceTimersByTimeAsync(5000));
+  expect(screen.queryByText("GitHub is unavailable")).not.toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Scout completed" })).toBeInTheDocument();
+  await act(() => vi.advanceTimersByTimeAsync(30000));
+  expect(detail).toHaveBeenCalledTimes(4);
+});
+
+it.each([401, 404])("requires manual retry after a permanent %s refresh error", async (status) => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const detail = vi.spyOn(api, "run").mockResolvedValueOnce(listed("running"))
+    .mockRejectedValue(new ApiError(status, "Run is inaccessible"));
+  render(<Runs id="9" />);
+  await screen.findByRole("button", { name: "Stop scout" });
+  await act(() => vi.advanceTimersByTimeAsync(32000));
+  expect(detail).toHaveBeenCalledTimes(2);
+  expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+});
+
+it("cancels a scheduled recovery when leaving a run", async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const detail = vi.spyOn(api, "run").mockResolvedValueOnce(listed("running"))
+    .mockRejectedValue(new Error("Temporary network failure"));
+  const view = render(<Runs id="9" />);
+  await screen.findByRole("button", { name: "Stop scout" });
+  await act(() => vi.advanceTimersByTimeAsync(2000));
+  view.unmount();
+  await act(() => vi.advanceTimersByTimeAsync(30000));
+  expect(detail).toHaveBeenCalledTimes(2);
+});
+
+it("respects a rate limit's retry delay while watching a run", async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const detail = vi.spyOn(api, "run").mockResolvedValueOnce(listed("running"))
+    .mockRejectedValueOnce(new ApiError(429, "Rate limited", {}, 12))
+    .mockResolvedValue(listed("completed"));
+  render(<Runs id="9" />);
+  await screen.findByRole("button", { name: "Stop scout" });
+  await act(() => vi.advanceTimersByTimeAsync(2000));
+  await act(() => vi.advanceTimersByTimeAsync(11000));
+  expect(detail).toHaveBeenCalledTimes(2);
+  await act(() => vi.advanceTimersByTimeAsync(1000));
+  expect(detail).toHaveBeenCalledTimes(3);
+});
+
+it("increases rate-limit waits and eventually requires manual retry", async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const detail = vi.spyOn(api, "run").mockResolvedValueOnce(listed("running"))
+    .mockRejectedValue(new ApiError(429, "Rate limited", {}, 12));
+  render(<Runs id="9" />);
+  await screen.findByRole("button", { name: "Stop scout" });
+  await act(() => vi.advanceTimersByTimeAsync(2000));
+  for (const [delay, calls] of [[12000, 2], [24000, 3], [48000, 4]]) {
+    await act(() => vi.advanceTimersByTimeAsync(delay - 1000));
+    expect(detail).toHaveBeenCalledTimes(calls);
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(detail).toHaveBeenCalledTimes(calls + 1);
+  }
+  await act(() => vi.advanceTimersByTimeAsync(300000));
+  expect(detail).toHaveBeenCalledTimes(5);
+  expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+});
+
+it("leaves an initial load error available for manual retry", async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const detail = vi.spyOn(api, "run").mockRejectedValue(new Error("Run could not load"));
+  render(<Runs id="9" />);
+  await screen.findByRole("button", { name: "Try again" });
+  await act(() => vi.advanceTimersByTimeAsync(30000));
   expect(detail).toHaveBeenCalledTimes(1);
 });
 

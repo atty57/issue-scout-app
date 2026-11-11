@@ -33,6 +33,14 @@ it("reopens where it was while that spot is still on a display, and otherwise fi
   expect(windowBounds({ ...saved, x: 100, y: -300 }, [primary], primary).y).toBe(0);
 });
 
+it("restores undersized saved windows to the Chrome-sized minimum while fitting small displays", () => {
+  const area = { x: 0, y: 0, width: 1920, height: 1040 };
+  const saved = { x: 10, y: 10, width: 200, height: 50 };
+  expect(windowBounds(saved, [area], area)).toEqual({ ...saved, width: 516, height: 95 });
+  const small = { x: 0, y: 0, width: 400, height: 80 };
+  expect(windowBounds(saved, [small], small)).toEqual({ ...saved, width: 400, height: 80 });
+});
+
 it("zooms through Chrome's steps from Ctrl + plus, minus and 0 only", () => {
   const down = (input) => zoomKey({ type: "keyDown", control: true, alt: false, meta: false, ...input });
   expect(down({ key: "=", code: "Equal" })).toBe("in");

@@ -17,7 +17,7 @@ import {
   Square,
 } from "lucide-react";
 import { api, isMock } from "../api";
-import { errorMessage } from "../errors";
+import { ApiError, errorMessage } from "../errors";
 import type { Run, RunOutcome, RunReport } from "../types";
 import { runStages } from "../stages";
 import { CodeBlock, PageHeader, RecordsTable, TaskRows } from "../components/beautiful";
@@ -36,6 +36,13 @@ export default function Runs({ id }: { id?: string }) {
 // How long to wait for GitHub to list a run it accepted. electron/runs.js refuses new starts for as long.
 const LISTING_GRACE_MS = 2 * 60e3;
 const REFRESH_MS = 5000;
+function pollingRetryDelay(error: unknown, rateLimitFailures: number) {
+  if (rateLimitFailures > 3) return 0; // manual retry remains available
+  const limited = error instanceof ApiError && error.status === 429;
+  const retryAfter = error instanceof ApiError ? error.retryAfter * 1000 : 0;
+  const pause = Math.max(REFRESH_MS, retryAfter || (limited ? 60000 : 0));
+  return pause * 2 ** Math.max(0, rateLimitFailures - 1);
+}
 const DELIVERY_LABELS = { sent: "sent", disabled: "email off", failed: "not sent", resending: "sending again" };
 // The engine's outcome from the run's result.json (desktop). A successful workflow alone proves no fix.
 const OUTCOME_LABELS = { fix_verified: "verified fix", fix_not_verified: "fix not verified", no_fix: "no fix", no_pick: "abstained" };
@@ -58,6 +65,7 @@ function RunIndex() {
   const resource = useResource(() => api.runs());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [pollingRevision, setPollingRevision] = useState(0);
   // The run ids listed before a start GitHub accepted but hadn't listed yet.
   const [accepted, setAccepted] = useState<string[]>();
   const running = resource.data?.some((item) => item.status === "running");
@@ -70,14 +78,33 @@ function RunIndex() {
     if (!watching) return;
     let live = true;
     let timer: ReturnType<typeof setTimeout>;
-    const next = () => {
+    let rateLimitFailures = 0;
+    let rateLimitMessage = "";
+    const next = (delay = REFRESH_MS) => {
       timer = setTimeout(async () => {
-        // ponytail: a failed refresh keeps the last list; the next one retries.
-        const data = await api.runs().catch(() => undefined);
-        if (!live) return;
-        if (data) setData(data);
-        next();
-      }, REFRESH_MS);
+        try {
+          const data = await api.runs();
+          if (!live) return;
+          setData(data);
+          if (rateLimitMessage) {
+            const recovered = rateLimitMessage;
+            setError(previous => previous === recovered ? "" : previous);
+            rateLimitMessage = "";
+          }
+          rateLimitFailures = 0;
+          next();
+        } catch (error) {
+          if (!live) return;
+          const limited = error instanceof ApiError && error.status === 429;
+          rateLimitFailures = limited ? rateLimitFailures + 1 : 0;
+          if (limited) {
+            rateLimitMessage = errorMessage(error);
+            setError(rateLimitMessage);
+          }
+          const pause = pollingRetryDelay(error, rateLimitFailures);
+          if (pause) next(pause);
+        }
+      }, delay);
     };
     next();
     return () => {
@@ -85,7 +112,7 @@ function RunIndex() {
       clearTimeout(timer);
     };
     // setData only wraps a state setter, so the first one stays valid.
-  }, [watching]);
+  }, [watching, pollingRevision]);
   useEffect(() => {
     if (!accepted) return;
     const timer = setTimeout(() => setAccepted(undefined), LISTING_GRACE_MS);
@@ -117,7 +144,11 @@ function RunIndex() {
           {busy ? "Starting scout…" : "Run full scout"}
         </button>
       </PageHeader>
-      {error && <ErrorState message={error} />}
+      {error && <ErrorState message={error} retry={() => {
+        setError("");
+        setPollingRevision(value => value + 1);
+        resource.reload();
+      }} />}
       {listing && (
         <div className="notice" role="status">
           <LoaderCircle size={16} className="spin" />
@@ -181,17 +212,31 @@ function RunDetail({ id }: { id: string }) {
   useEffect(() => {
     let active = true;
     let timer: ReturnType<typeof setTimeout>;
+    let watching = false;
+    let rateLimitFailures = 0;
     async function poll() {
       try {
         const result = await api.run(id);
         if (!active) return;
         setRun(result);
         setError("");
+        rateLimitFailures = 0;
         // Keep checking while the scout runs or its report is being emailed again.
         const wait = result.status === "running" ? 2000 : result.delivery?.status === "resending" ? 5000 : 0;
+        watching = wait > 0;
         if (wait) timer = setTimeout(poll, wait);
       } catch (error) {
-        if (active) setError(errorMessage(error));
+        if (!active) return;
+        setError(errorMessage(error));
+        // Preserve the last result and recover an ongoing watch after temporary failures.
+        // Initial loads and permanent errors still offer the manual retry action.
+        const temporary = !(error instanceof ApiError) || error.status === 408 || error.status === 429 || error.status >= 500;
+        if (watching && temporary) {
+          const limited = error instanceof ApiError && error.status === 429;
+          rateLimitFailures = limited ? rateLimitFailures + 1 : 0;
+          const pause = pollingRetryDelay(error, rateLimitFailures);
+          if (pause) timer = setTimeout(poll, pause);
+        }
       }
     }
     void poll();

@@ -36,6 +36,20 @@ it("opens Runs as the primary workspace for a connected desktop account", async 
   expect(window.location.hash).toBe("#/runs");
 });
 
+it("clears a failed sign-in message after the next successful sign-in", async () => {
+  vi.spyOn(api, "me").mockRejectedValue(new ApiError(401, "Signed out"));
+  vi.spyOn(api, "runs").mockResolvedValue([]);
+  vi.spyOn(api, "startLogin").mockRejectedValueOnce(new Error("Previous sign-in failed"))
+    .mockResolvedValue({ user_code: "OFFLINE", verification_uri: "https://github.com/login/device" });
+  vi.spyOn(api, "finishLogin").mockResolvedValue({ login: "octocat", avatar_url: "", onboarding: "ready", repository: { id: 42, full_name: "octocat/scout", html_url: "https://github.com/octocat/scout" } });
+  render(<App />);
+  fireEvent.click(await screen.findByRole("button", { name: "Sign in with GitHub" }));
+  await screen.findByText("Previous sign-in failed");
+  fireEvent.click(screen.getByRole("button", { name: "Sign in with GitHub" }));
+  await screen.findByRole("heading", { name: "Your runs & reports" });
+  expect(screen.queryByText("Previous sign-in failed")).not.toBeInTheDocument();
+});
+
 it("keeps the revision on a profile edit and omits unsupported lock controls", async () => {
   const save = vi.spyOn(api, "saveProfile").mockResolvedValue({ ...profile, summary: "My updated skills", revision: "new-revision" });
   render(<Profile />);

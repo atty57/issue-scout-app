@@ -188,6 +188,7 @@ export function createBackend({ tokens, repositories, clientId, openExternal, sa
         error: error instanceof Error ? error.message : "GitHub request failed.",
         ...(error instanceof GitHubError && error.fields ? { fields: error.fields } : {}),
         ...(error instanceof GitHubError && error.reconnect ? { reconnect: true } : {}),
+        ...(error instanceof GitHubError && error.retryAfter > 0 ? { retryAfter: error.retryAfter } : {}),
       }];
     }
   };

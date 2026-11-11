@@ -48,7 +48,8 @@ h3 { font-size: 14px; font-weight: 600; }
 .text-button, .subtle-link, .back-link { font-size: 13px; }
 .button, .nav-link, .settings-sections a, .records-table tr { transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease; }
 .icon-button { min-width: 34px; min-height: 34px; border-radius: 8px; }
-.badge { font-size: 12px; font-weight: 550; padding: 3px 9px; border-radius: 6px; line-height: 1.5; white-space: normal; }
+.badge { font-size: 12px; font-weight: 550; padding: 3px 9px; border-radius: 6px; line-height: 1.5; white-space: normal; overflow-wrap: break-word; word-break: normal; }
+.badge.run-status { white-space: nowrap; max-width: none; flex-shrink: 0; }
 .notice, .error-box { border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.6; }
 .notice { border: 1px solid var(--green-border); background: var(--green-light); color: var(--text); }
 .error-box p { overflow-wrap: anywhere; }
@@ -121,7 +122,7 @@ h3 { font-size: 14px; font-weight: 600; }
 .record-title { display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; overflow-wrap: anywhere; }
 .record-title:hover { color: var(--green); text-decoration: underline; text-underline-offset: 3px; }
 .record-detail { display: block; color: var(--muted); font-size: 12px; line-height: 1.65; max-width: 640px; overflow-wrap: anywhere; }
-.record-date { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.record-date { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .records-table .record-id { display: block; margin-top: 4px; }
 .run-status.completed.outcome-unknown { background: var(--tag); color: var(--muted); }
 .run-status.outcome-fix_not_verified, .run-status.outcome-no_fix { background: var(--amber-bg); color: var(--amber); }

@@ -141,6 +141,7 @@ export default function App() {
     window.location.hash = "/";
   }
   function signedIn(value: Me) {
+    setError("");
     setMe(value);
     if (!isMock && value.repository && currentRoute() === "/") window.location.hash = "/runs";
   }

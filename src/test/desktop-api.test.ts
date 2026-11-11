@@ -39,3 +39,14 @@ it("reloads the account when the desktop backend says the repository must be rec
     window.scout = previous;
   }
 });
+
+it("carries a rate-limit delay through the real desktop transport", async () => {
+  vi.stubEnv("VITE_API_MODE", "desktop");
+  vi.resetModules();
+  const previous = window.scout;
+  window.scout = { request: vi.fn().mockResolvedValue([429, { error: "Rate limited", retryAfter: 120 }]) };
+  try {
+    const { api } = await import("../api");
+    await expect(api.run("9")).rejects.toMatchObject({ status: 429, retryAfter: 120 });
+  } finally { window.scout = previous; }
+});

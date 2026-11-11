@@ -7,12 +7,23 @@ export const SCOPES = "repo workflow";
 export const SCOUT_TEMPLATE = "atty57/issue-scout-template";
 
 export class GitHubError extends Error {
-  constructor(status, message, fields, detail) {
+  constructor(status, message, fields, detail, retryAfter) {
     super(message);
     this.status = status;
     this.fields = fields;
     this.detail = detail;
+    this.retryAfter = retryAfter;
   }
+}
+
+// Seconds until another request is allowed. Preserve both limits if GitHub supplies both.
+function rateLimitDelay(response) {
+  const retry = response.headers?.get("retry-after") ?? "";
+  const seconds = /^\d+(?:\.\d+)?$/.test(retry.trim()) ? Number(retry) : 0;
+  const reset = response.headers?.get("x-ratelimit-remaining") === "0"
+    ? Number(response.headers?.get("x-ratelimit-reset")) - Date.now() / 1000 : 0;
+  const delays = [seconds, reset].filter(value => Number.isFinite(value) && value > 0);
+  return delays.length ? Math.ceil(Math.max(...delays)) : 60;
 }
 
 // Only call fixed GitHub API routes built by main; never follow an authenticated redirect.
@@ -46,7 +57,7 @@ export async function githubRequest(token, route, { method = "GET", body, fetchI
       ...messages,
     };
     const fallback = status >= 500 ? `GitHub is unavailable (HTTP ${status}).` : `GitHub refused the request (HTTP ${status})${detail ? `: ${detail}` : ""}.`;
-    throw new GitHubError(status, known[status] || fallback, undefined, detail);
+    throw new GitHubError(status, known[status] || fallback, undefined, detail, status === 429 ? rateLimitDelay(response) : undefined);
   }
   // Variable and secret writes, run starts and cancels answer 201, 202 or 204 with an empty body.
   if ([201, 202, 204].includes(response.status)) return response.json().catch(() => null);

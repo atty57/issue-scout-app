@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createBackend } from "./backend.js";
 import { EMAIL_RELAY_URL, GITHUB_CLIENT_ID } from "./config.js";
 import { createEmailStore, createRepositoryStore } from "./repositories.js";
-import { nextZoom, readWindowState, windowBounds, writeWindowState, zoomKey } from "./window-state.js";
+import { MIN_WINDOW_SIZE, nextZoom, readWindowState, windowBounds, writeWindowState, zoomKey } from "./window-state.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const tokenFile = () => path.join(app.getPath("userData"), "github-token.bin");
@@ -101,6 +101,8 @@ function createWindow() {
   const bounds = windowBounds(state.bounds, screen.getAllDisplays().map((display) => display.workArea), screen.getPrimaryDisplay().workArea);
   const win = new BrowserWindow({
     ...bounds,
+    minWidth: MIN_WINDOW_SIZE.width,
+    minHeight: MIN_WINDOW_SIZE.height,
     show: false,
     title: "Issue Scout",
     icon: path.join(here, "icon.png"),
