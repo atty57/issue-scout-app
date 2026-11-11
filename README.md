@@ -178,6 +178,30 @@ Signing out or disconnecting does not erase email records already held by the re
 - [ ] Scout engine updates that preserve existing repositories' settings and data.
 - [ ] macOS support; currently deferred while Windows is the supported platform.
 
+### Future directions: personalization and visual understanding
+
+These are proposed contributor projects, not features available in the current beta.
+
+- [ ] **Contribution-based personalization.** Opt-in import of authored PRs, merged contributions and changed
+  files to improve issue recommendations. Combine observed experience with explicit feedback and learning goals;
+  let users inspect, correct, reset or disable learned preferences. Track actual contributions separately from
+  Scout's attempted-issue history.
+- [ ] **Contribution knowledge graph.** Explore connections between contributions, repositories, languages,
+  topics and suggested issues. Link recommendations to supporting evidence, distinguish observed facts from
+  inferred topics, and provide a searchable list alternative.
+- [ ] **Visual bug explainer.** Walk through a reported symptom, relevant code, proposed cause, patch and
+  regression evidence. Connect diagram nodes to commit-specific files, diff hunks and recorded test results.
+  Clearly mark unverified explanations and missing evidence; a generated diagram must never establish a
+  verified-fix outcome on its own.
+
+Suggested sequence: contribution import → editable preference feedback → evidence-linked bug explanations →
+interactive contribution graph. Public contributions would be the default; private-repository analysis would
+require explicit opt-in. Imported history would stay in local storage or the user's private Scout repository,
+with model-analysis costs under the user's control.
+
+Contributor work can be split across GitHub integration, preference ranking, graph/accessibility UI, structured
+engine artifacts and offline evaluation/privacy fixtures.
+
 ## Development
 
 The steps below are for contributors. Installer users can skip this section.
