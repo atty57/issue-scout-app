@@ -1,4 +1,6 @@
-                                                                <img src="build/icon.svg" alt="Issue Scout compass logo" width="72" height="72">
+<p align="center">
+  <img src="build/icon.svg" alt="Issue Scout compass logo" width="72" height="72">
+</p>
 
 # Issue Scout desktop
 
