@@ -102,9 +102,9 @@ function ProfileEditor({ initial, onReload }: { initial: ProfileType; onReload: 
     <>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">THE EXPERIENCE BEHIND YOUR SHORTLIST</span>
+          <span className="eyebrow">{isMock ? "THE EXPERIENCE BEHIND YOUR SHORTLIST" : "WHAT YOUR SCOUT LOOKS FOR"}</span>
           <h1>
-            Your profile, in your hands<span className="green-text">.</span>
+            {isMock ? <>Your profile, in your hands<span className="green-text">.</span></> : "Your profile"}
           </h1>
           <p>{isMock ? "See what we know, where it came from, and make it your own." : "Your skills and preferences, saved in your private Scout repository."}</p>
         </div>
@@ -193,7 +193,7 @@ function ProfileEditor({ initial, onReload }: { initial: ProfileType; onReload: 
                         ) : (
                           <strong>{skill.value}</strong>
                         )}
-                        <Sources values={skill.sources} />
+                        {isMock && <Sources values={skill.sources} />}
                       </div>
                       <div className="source-actions">
                         {isMock && skill.locked && (
@@ -314,7 +314,13 @@ function ProfileEditor({ initial, onReload }: { initial: ProfileType; onReload: 
                               }
                             >
                               {Object.entries(languageNames)
-                                .filter(([key]) => key !== "none")
+                                .filter(
+                                  ([key]) =>
+                                    key !== "none" &&
+                                    (!value.supported_languages ||
+                                      value.supported_languages.includes(key as Language) ||
+                                      key === language.value),
+                                )
                                 .map(([key, label]) => (
                                   <option key={key} value={key}>
                                     {label}
@@ -325,7 +331,7 @@ function ProfileEditor({ initial, onReload }: { initial: ProfileType; onReload: 
                         ) : (
                           <strong>{languageNames[language.value]}</strong>
                         )}
-                        <Sources values={language.sources} />
+                        {isMock && <Sources values={language.sources} />}
                       </div>
                       <div className="source-actions">
                         {isMock && language.locked && (
@@ -397,12 +403,24 @@ function ProfileEditor({ initial, onReload }: { initial: ProfileType; onReload: 
                     Add language
                   </button>
                 )}
+                {editing && value.supported_languages && (() => {
+                  // Languages the app knows but this repository's engine doesn't run yet.
+                  const newer = Object.keys(languageNames).filter(
+                    (key) => key !== "none" && !value.supported_languages!.includes(key as Language),
+                  );
+                  return newer.length > 0 ? (
+                    <p className="field-hint">
+                      {newer.map((key) => languageNames[key]).join(", ")} need a Scout repository created from the
+                      latest Issue Scout template.
+                    </p>
+                  ) : null;
+                })()}
                 {fieldError("languages")}
               </section>
               <section className="panel profile-section">
                 <h2>Your kind of contribution</h2>
                 <p className="section-description">
-                  Choose the work you’d like to see in your shortlist.
+                  {isMock ? "Choose the work you’d like to see in your shortlist." : "Choose the work your scout looks for."}
                 </p>
                 {editing ? (
                   <div className="check-options">
@@ -476,7 +494,7 @@ function ProfileEditor({ initial, onReload }: { initial: ProfileType; onReload: 
                 <div className="mini-divider" />
                 <h3>
                   Already contributed to{" "}
-                  <span className="badge">From GitHub · read only</span>
+                  <span className="badge">{isMock ? "From GitHub · read only" : "From profile.json · read only"}</span>
                 </h3>
                 <ul className="repo-list">
                   {value.merged_in.map((repo) => (
@@ -489,7 +507,7 @@ function ProfileEditor({ initial, onReload }: { initial: ProfileType; onReload: 
                   ))}
                   {!value.merged_in.length && (
                     <li className="muted">
-                      Your merged contributions will appear here.
+                      {isMock ? "Your merged contributions will appear here." : "None listed in your profile.json."}
                     </li>
                   )}
                 </ul>
@@ -674,7 +692,7 @@ function Change({ change }: { change: ProfileChange }) {
       </div>
       <strong>{change.field.replaceAll("_", " ")} updated</strong>
       {change.note && <p>{change.note}</p>}
-      {change.commit_url ? <External href={change.commit_url}>View changes on GitHub</External> : <details>
+      {change.commit_url ? <External href={change.commit_url} className="text-button">View changes on GitHub</External> : <details>
         <summary>See change</summary>
         <div className="change-values">
           <span>Before</span>

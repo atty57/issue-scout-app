@@ -12,6 +12,7 @@ import { api, isMock } from "../api";
 import { errorMessage } from "../errors";
 import type { Job } from "../types";
 import { safeHttps } from "../utils";
+import { SpinnerRing } from "./beautiful";
 
 export function Logo() {
   return (
@@ -33,7 +34,7 @@ export function Loading({
 }) {
   return (
     <div role="status" className="loading-state">
-      <LoaderCircle className="spin" size={24} />
+      <SpinnerRing active />
       <span>{label}</span>
     </div>
   );

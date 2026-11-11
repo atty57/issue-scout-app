@@ -3,6 +3,10 @@ import { api } from "../api";
 import { ApiError } from "../errors";
 import { resetMock } from "../mock/server";
 import { fileError, safeHttps } from "../utils";
+import type { Run } from "../types";
+
+// The demo server always returns the started run; only the desktop app can answer `pending`.
+const startRun = (suggestionId?: string) => api.startRun(suggestionId) as Promise<Run>;
 
 async function settle<T>(promise: Promise<T>): Promise<T> {
   const observed = promise.then(
@@ -22,7 +26,7 @@ afterEach(() => vi.useRealTimers());
 
 describe("full scout contract", () => {
   it("progresses through the full workflow and saves a report and patch", async () => {
-    const started = await settle(api.startRun("sg_01"));
+    const started = await settle(startRun("sg_01"));
     const stages = [];
     let run = started;
     for (let count = 0; count < 9; count++) {
@@ -46,13 +50,13 @@ describe("full scout contract", () => {
     expect(run.report?.report_text).toContain("SAMPLE DATA");
   });
   it("prevents overlapping runs for the same account", async () => {
-    await settle(api.startRun());
-    const error = await settle(api.startRun()).catch((error) => error);
+    await settle(startRun());
+    const error = await settle(startRun()).catch((error) => error);
     expect(error).toBeInstanceOf(ApiError);
     expect(error.status).toBe(409);
   });
   it("stops an active run without generating a report", async () => {
-    const run = await settle(api.startRun());
+    const run = await settle(startRun());
     await settle(api.cancelRun(run.id));
     const result = await settle(api.run(run.id));
     expect(result.status).toBe("cancelled");
@@ -60,7 +64,7 @@ describe("full scout contract", () => {
   });
   it("abstains before drafting when no issue qualifies", async () => {
     resetMock("abstained");
-    const started = await settle(api.startRun());
+    const started = await settle(startRun());
     let run = started;
     for (let count = 0; count < 4; count++) run = await settle(api.run(run.id));
     expect(run.status).toBe("abstained");
@@ -79,7 +83,7 @@ describe("full scout contract", () => {
   it("supports discovery-only runs without drafting or validation", async () => {
     const settings = await settle(api.scoutSettings());
     await settle(api.saveScoutSettings({ ...settings, draft_fixes: false }));
-    let run = await settle(api.startRun());
+    let run = await settle(startRun());
     for (let count = 0; count < 7; count++) run = await settle(api.run(run.id));
     expect(run.status).toBe("completed");
     expect(run.report).toBeUndefined();
@@ -88,7 +92,7 @@ describe("full scout contract", () => {
   });
   it("keeps failed validation distinct from a passing regression result", async () => {
     resetMock("run_failure");
-    let run = await settle(api.startRun());
+    let run = await settle(startRun());
     for (let count = 0; count < 8; count++) run = await settle(api.run(run.id));
     expect(run.status).toBe("failed");
     expect(run.report).toBeUndefined();

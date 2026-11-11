@@ -36,7 +36,7 @@ export default function RepositoryOnboarding({ me, onConnected }: { me: Me; onCo
     <div className="onboarding-layout">
       <div className="onboarding-copy">
         <span className="eyebrow">YOUR SCOUT, IN YOUR GITHUB</span>
-        <h1>A private home<br />for your Scout<span className="green-text">.</span></h1>
+        <h1>A private home{" "}<br />for your Scout<span className="green-text">.</span></h1>
         <p>Create your own private copy of Issue Scout, or connect one you already have.</p>
         <ul className="benefit-list">
           <li><Check size={17} />Your profile and settings in one place</li>

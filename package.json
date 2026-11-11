@@ -1,5 +1,8 @@
 {
   "name": "issue-scout-app",
+  "productName": "Issue Scout",
+  "description": "Desktop control plane for your private Issue Scout repository",
+  "author": "atty57",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,19 +10,16 @@
   "scripts": {
     "build": "tsc -b && vite build",
     "start": "npm run build && electron .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dist:win": "npm run build && electron-builder --win nsis --x64 --publish never"
   },
   "dependencies": {
-    "@fontsource-variable/dm-sans": "^5.3.0",
-    "@fontsource-variable/manrope": "^5.3.0",
     "libsodium-wrappers": "0.8.4",
-    "lucide-react": "^0.468.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-markdown": "^10.1.0",
-    "rehype-sanitize": "^6.0.0"
+    "yaml": "2.9.1"
   },
   "devDependencies": {
+    "@fontsource-variable/dm-sans": "^5.3.0",
+    "@fontsource-variable/manrope": "^5.3.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -27,9 +27,62 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^5.0.0",
     "electron": "44.9.3",
+    "electron-builder": "26.18.0",
     "jsdom": "^26.1.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "rehype-sanitize": "^6.0.0",
     "typescript": "~5.9.2",
     "vite": "^7.1.0",
     "vitest": "^3.2.4"
+  },
+  "build": {
+    "appId": "io.github.atty57.issuescout",
+    "productName": "Issue Scout",
+    "copyright": "Copyright © 2026 atty57",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "package.json",
+      "dist/**/*",
+      "electron/*.js",
+      "electron/preload.cjs",
+      "electron/icon.png",
+      "THIRD_PARTY_NOTICES.md",
+      "!electron/*.test.js",
+      "!electron/zip-fixture.js"
+    ],
+    "asar": true,
+    "electronDist": "node_modules/electron/dist",
+    "electronVersion": "44.9.3",
+    "electronFuses": {
+      "runAsNode": false,
+      "enableCookieEncryption": true,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Issue-Scout-Setup-${version}-${arch}.${ext}"
+    },
+    "publish": null
   }
 }

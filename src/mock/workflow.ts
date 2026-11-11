@@ -140,6 +140,7 @@ export function makeReport(
     test_commands: documentation
       ? [["npm", "run", "docs:build"]]
       : [["pytest", "tests/test_async_export.py", "-q"]],
+    work_type: documentation ? "documentation" : "code",
     tests_passed: true,
     regression_reproduced: documentation ? null : true,
     validation_log: documentation
@@ -165,7 +166,7 @@ export function makeReport(
     },
     report_text: "",
   };
-  report.report_text = `[ISSUE SCOUT DEMO REPORT — SAMPLE DATA]\n${suggestion.issue.title}\n${suggestion.issue.url}\n\nRoot cause:\n${report.root_cause}\n\nApproach:\n${report.approach}\n\nRisks:\n${report.risks}\n\nNot verified:\n${report.not_verified}\n\nClaim comment:\n${report.claim_comment}\n\nMaintainer questions:\n${report.maintainer_questions.join("\n")}\n\nChecklist:\n${report.checklist.join("\n")}\n\nPR title: ${report.pr_title}\n${report.pr_body}\n\nValidation:\n${report.validation_log}\n\nRegression:\n${report.regression_log}\n\nEstimated usage: $${report.cost_estimate.toFixed(2)}\n`;
+  report.report_text = `[ISSUE SCOUT DEMO REPORT — SAMPLE DATA]\n${suggestion.issue.title}\n${suggestion.issue.url}\n\nRoot cause:\n${report.root_cause}\n\nApproach:\n${report.approach}\n\nRisks:\n${report.risks}\n\nNot verified:\n${report.not_verified}\n\nClaim comment:\n${report.claim_comment}\n\nMaintainer questions:\n${report.maintainer_questions.join("\n")}\n\nChecklist:\n${report.checklist.join("\n")}\n\nPR title: ${report.pr_title}\n${report.pr_body}\n\nValidation:\n${report.validation_log}\n\nRegression:\n${report.regression_log}\n\nEstimated usage: ${report.cost_estimate === null ? "n/a" : `$${report.cost_estimate.toFixed(2)}`}\n`;
   return report;
 }
 export function completedRun(suggestion: Suggestion): Run {

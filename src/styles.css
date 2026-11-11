@@ -222,7 +222,7 @@ fieldset {
   align-self: flex-start;
 }
 .workspace-label {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.5px;
   color: var(--subtle);
@@ -276,7 +276,7 @@ fieldset {
   padding-top: 3px;
 }
 .sidebar-message p {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.85;
   color: var(--muted);
 }
@@ -288,7 +288,7 @@ fieldset {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin: 0 12px 25px;
 }
@@ -317,11 +317,11 @@ fieldset {
   gap: 3px;
 }
 .sidebar-account strong {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
 }
 .sidebar-account div > span {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 .sidebar-account .icon-button {
@@ -347,7 +347,7 @@ fieldset {
   display: flex;
   align-items: center;
   gap: 13px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .breadcrumb strong {
@@ -378,7 +378,7 @@ fieldset {
   width: 28px;
   background: #e6e4da;
   color: #4e5144;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   display: grid;
   place-items: center;
@@ -388,7 +388,7 @@ fieldset {
   display: inline-flex;
   gap: 6px;
   align-items: center;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .demo-badge .status-dot {
@@ -417,7 +417,7 @@ fieldset {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 650;
   letter-spacing: 1.6px;
   color: var(--green);
@@ -453,7 +453,7 @@ fieldset {
   padding: 9px 14px;
   border: 1px solid transparent;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
   transition:
@@ -480,7 +480,7 @@ fieldset {
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--line);
-  font-size: 10px;
+  font-size: 12px;
   padding: 8px 11px;
   min-height: 32px;
 }
@@ -521,7 +521,7 @@ fieldset {
   background: transparent;
   padding: 5px 0;
   color: var(--green);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   display: inline-flex;
   gap: 7px;
@@ -563,7 +563,7 @@ fieldset {
   letter-spacing: -0.1px;
 }
 .count-badge {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 600;
   min-width: 18px;
   height: 18px;
@@ -578,7 +578,7 @@ fieldset {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .subtle-link:hover {
@@ -604,7 +604,7 @@ fieldset {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 10px;
+  font-size: 12px;
   min-width: 0;
 }
 .repo-line > a {
@@ -624,13 +624,13 @@ fieldset {
 }
 .issue-number {
   color: var(--subtle);
-  font-size: 9px;
+  font-size: 12px;
 }
 .star-count {
   display: flex;
   gap: 5px;
   align-items: center;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 .star-count svg {
@@ -657,7 +657,7 @@ fieldset {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 9px;
+  font-size: 12px;
   padding: 3px 7px;
   border-radius: 4px;
   color: var(--muted);
@@ -697,10 +697,10 @@ fieldset {
   color: var(--green);
 }
 .label-badge {
-  font-size: 8px;
+  font-size: 12px;
 }
 .updated {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--subtle);
   margin-left: auto;
 }
@@ -716,7 +716,7 @@ fieldset {
   align-items: center;
   gap: 6px;
   color: var(--green);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
   margin-bottom: 4px;
 }
@@ -725,12 +725,12 @@ fieldset {
   line-height: 13px;
 }
 .fit-block .markdown {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--green);
   line-height: 1.8;
 }
 .markdown {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.8;
   overflow-wrap: anywhere;
 }
@@ -755,11 +755,11 @@ fieldset {
   background: var(--tag);
   border: 1px solid var(--line);
   border-radius: 5px;
-  font-size: 11px;
+  font-size: 12px;
   white-space: pre-wrap;
 }
 .markdown code {
-  font-size: 10px;
+  font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 .markdown p > code {
@@ -777,7 +777,7 @@ fieldset {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   margin-bottom: 5px;
 }
@@ -785,7 +785,7 @@ fieldset {
   color: var(--muted);
 }
 .evidence-grid .markdown {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.8;
 }
@@ -801,7 +801,7 @@ details {
 }
 summary {
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
   list-style: none;
   display: flex;
   gap: 8px;
@@ -828,12 +828,12 @@ details[open] > summary > svg:last-child {
 }
 .score-detail summary strong {
   color: var(--text);
-  font-size: 11px;
+  font-size: 12px;
   margin-left: 3px;
 }
 .score-list {
   margin: 0;
-  font-size: 10px;
+  font-size: 12px;
   min-width: 180px;
 }
 .score-list > div {
@@ -864,7 +864,7 @@ details[open] > summary > svg:last-child {
   display: flex;
   align-items: flex-start;
   gap: 7px;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.7;
   padding: 11px 0 0;
@@ -889,7 +889,7 @@ details[open] > summary > svg:last-child {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
 }
@@ -930,7 +930,7 @@ details[open] > summary > svg:last-child {
 }
 .feedback-actions > span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   margin-right: 4px;
 }
 .feedback-actions .icon-button {
@@ -946,7 +946,7 @@ details[open] > summary > svg:last-child {
   align-items: center;
   gap: 7px;
   color: var(--subtle);
-  font-size: 10px;
+  font-size: 12px;
   padding: 27px 0 20px;
 }
 .feedback-picker {
@@ -960,7 +960,7 @@ details[open] > summary > svg:last-child {
   font-size: 12px;
 }
 .feedback-picker > .muted {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.7;
   margin: 3px 0 12px;
 }
@@ -978,7 +978,7 @@ details[open] > summary > svg:last-child {
   background: var(--surface);
   padding: 7px 10px;
   border-radius: 5px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .reason-chip.selected {
   background: var(--green-light);
@@ -998,7 +998,7 @@ details[open] > summary > svg:last-child {
 }
 .feedback-confirmation p {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   margin-top: 4px;
 }
 .feedback-confirmation .text-button {
@@ -1033,7 +1033,7 @@ details[open] > summary > svg:last-child {
 }
 .profile-glance > p {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.8;
   margin-top: 12px;
 }
@@ -1045,7 +1045,7 @@ details[open] > summary > svg:last-child {
 .small-caps {
   display: block;
   color: var(--subtle);
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 1.1px;
   font-weight: 600;
   line-height: 1.7;
@@ -1057,7 +1057,7 @@ details[open] > summary > svg:last-child {
   margin-top: 12px;
 }
 .profile-glance .glance-summary {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.8;
   margin: 12px 0 18px;
 }
@@ -1066,7 +1066,7 @@ details[open] > summary > svg:last-child {
   justify-content: space-between;
   align-items: center;
   gap: 7px;
-  font-size: 10px;
+  font-size: 12px;
   margin: 12px 0;
 }
 .glance-stat > span {
@@ -1074,7 +1074,7 @@ details[open] > summary > svg:last-child {
 }
 .glance-stat strong {
   font-weight: 500;
-  font-size: 10px;
+  font-size: 12px;
 }
 .aside-link {
   display: flex;
@@ -1083,7 +1083,7 @@ details[open] > summary > svg:last-child {
   padding-top: 15px;
   margin-top: 17px;
   border-top: 1px solid var(--line);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--green);
 }
@@ -1091,7 +1091,7 @@ details[open] > summary > svg:last-child {
   padding: 30px 7px 7px;
 }
 .how-it-works .small-caps {
-  font-size: 7px;
+  font-size: 12px;
   letter-spacing: 1px;
 }
 .how-it-works h3 {
@@ -1099,7 +1099,7 @@ details[open] > summary > svg:last-child {
   margin: 10px 0 8px;
 }
 .how-it-works > p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.9;
 }
@@ -1115,7 +1115,7 @@ details[open] > summary > svg:last-child {
   margin-bottom: 20px;
 }
 .how-it-works li > span {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--green);
   font-weight: 600;
   border: 1px solid var(--green-border);
@@ -1128,12 +1128,12 @@ details[open] > summary > svg:last-child {
 }
 .how-it-works li strong {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   margin: 2px 0 4px;
 }
 .how-it-works li p {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.8;
   color: var(--muted);
 }
@@ -1148,11 +1148,11 @@ details[open] > summary > svg:last-child {
   margin-top: 5px;
 }
 .next-scout strong {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
 }
 .next-scout p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 5px;
 }
@@ -1162,7 +1162,7 @@ details[open] > summary > svg:last-child {
   justify-content: space-between;
   gap: 15px;
   padding: 25px 38px 38px;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--subtle);
 }
 .demo-controls {
@@ -1181,7 +1181,7 @@ details[open] > summary > svg:last-child {
   border: 1px solid var(--line);
   box-shadow: 0 2px 8px #00000008;
   border-radius: 5px;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   height: 26px;
   pointer-events: none;
@@ -1313,7 +1313,7 @@ details[open] > summary > svg:last-child {
   max-width: 390px;
 }
 .next-run {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--green);
   padding: 8px 12px;
   background: var(--green-light);
@@ -1362,7 +1362,7 @@ details[open] > summary > svg:last-child {
   margin-bottom: 7px;
 }
 .section-description {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.8;
   margin-bottom: 22px;
@@ -1400,12 +1400,12 @@ details[open] > summary > svg:last-child {
   align-items: center;
   flex-wrap: wrap;
   gap: 5px;
-  font-size: 9px;
+  font-size: 12px;
   margin-top: 8px;
   color: var(--muted);
 }
 .source-chip {
-  font-size: 8px;
+  font-size: 12px;
   background: var(--tag);
   padding: 3px 5px;
   border-radius: 3px;
@@ -1421,7 +1421,7 @@ details[open] > summary > svg:last-child {
   gap: 4px;
   align-items: center;
   color: var(--green);
-  font-size: 9px;
+  font-size: 12px;
 }
 .field {
   display: flex;
@@ -1430,7 +1430,7 @@ details[open] > summary > svg:last-child {
   margin-bottom: 16px;
 }
 .field > span:first-child {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted);
 }
@@ -1462,7 +1462,7 @@ textarea::placeholder {
   border-color: var(--red) !important;
 }
 .field-error {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--red);
   display: block;
   line-height: 1.7;
@@ -1470,7 +1470,7 @@ textarea::placeholder {
 }
 .field-hint {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   font-weight: 400 !important;
   line-height: 1.8;
@@ -1491,13 +1491,13 @@ textarea::placeholder {
   color: var(--text);
 }
 .profile-help p {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.9;
   color: var(--muted);
   margin-top: 10px;
 }
 .profile-help .field-hint {
-  font-size: 9px;
+  font-size: 12px;
 }
 .change-history {
   padding: 21px 18px;
@@ -1539,38 +1539,38 @@ textarea::placeholder {
   margin-bottom: 7px;
 }
 .timeline-top > .badge {
-  font-size: 8px;
+  font-size: 12px;
 }
 .timeline time {
-  font-size: 8px;
+  font-size: 12px;
   color: var(--muted);
 }
 .timeline li > strong {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   text-transform: capitalize;
 }
 .timeline li > p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.8;
   margin: 6px 0;
 }
 .timeline summary {
-  font-size: 9px;
+  font-size: 12px;
   margin-top: 9px;
 }
 .change-values {
   background: var(--tag);
   padding: 10px;
   border-radius: 5px;
-  font-size: 9px;
+  font-size: 12px;
 }
 .change-values > span {
   color: var(--muted);
 }
 .change-values pre {
-  font-size: 9px;
+  font-size: 12px;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
   max-height: 200px;
@@ -1600,7 +1600,7 @@ input[type="checkbox"] {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .repo-list li {
   display: flex;
@@ -1634,7 +1634,7 @@ input[type="checkbox"] {
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 11px;
+  font-size: 12px;
   margin: 8px 0 22px;
 }
 .save-bar {
@@ -1654,7 +1654,7 @@ input[type="checkbox"] {
   z-index: 15;
 }
 .save-bar > span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .save-bar > div:last-child {
@@ -1678,7 +1678,7 @@ input[type="checkbox"] {
   border-bottom: 2px solid transparent;
   padding: 10px 15px 14px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .filter-tabs > button.active {
   color: var(--green);
@@ -1691,7 +1691,7 @@ input[type="checkbox"] {
   display: flex;
   gap: 7px;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .history-verdict.up {
@@ -1705,7 +1705,7 @@ input[type="checkbox"] {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   padding: 0 0 20px;
 }
@@ -1729,7 +1729,7 @@ input[type="checkbox"] {
   font-size: 13px;
 }
 .account-row p {
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 5px;
 }
 .account-row > .badge {
@@ -1818,7 +1818,7 @@ input[type="checkbox"] {
   flex-direction: column;
   gap: 19px;
   margin: 28px 0 40px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .benefit-list li {
@@ -1837,16 +1837,16 @@ input[type="checkbox"] {
   border-top: 1px solid var(--line);
 }
 .connected-account strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 .connected-account p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 4px;
 }
 .connected-account .badge {
   margin-left: auto;
-  font-size: 8px;
+  font-size: 12px;
 }
 .onboarding-panel {
   padding: 30px;
@@ -1909,7 +1909,7 @@ input[type="checkbox"] {
   overflow-wrap: anywhere;
 }
 .dropzone p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.7;
 }
@@ -1925,14 +1925,14 @@ input[type="checkbox"] {
   justify-content: center;
   width: 100%;
   margin-top: 15px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .privacy-note {
   display: flex;
   align-items: flex-start;
   gap: 7px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.8;
   margin-top: 22px;
 }
@@ -1942,7 +1942,7 @@ input[type="checkbox"] {
 .remove-file {
   margin-top: 8px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .build-container {
   max-width: 650px;
@@ -1976,7 +1976,7 @@ input[type="checkbox"] {
 .step-icon {
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 12px;
   width: 29px;
   height: 29px;
   border: 1px solid var(--line);
@@ -1990,7 +1990,7 @@ input[type="checkbox"] {
   margin-top: 4px;
 }
 .progress-steps p {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.8;
   margin-top: 4px;
 }
@@ -2021,7 +2021,7 @@ input[type="checkbox"] {
 .compact .loading-state {
   min-height: 55px;
   flex-direction: row;
-  font-size: 11px;
+  font-size: 12px;
   justify-content: flex-start;
   gap: 10px;
 }
@@ -2074,7 +2074,7 @@ input[type="checkbox"] {
 }
 .landing-note {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 13px;
 }
@@ -2082,7 +2082,7 @@ input[type="checkbox"] {
   display: flex;
   gap: 21px;
   margin-top: 33px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .landing-features > span {
@@ -2136,7 +2136,7 @@ input[type="checkbox"] {
   margin-bottom: 23px;
 }
 .preview-top > span {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.9;
   color: var(--muted);
   flex: 1;
@@ -2152,7 +2152,7 @@ input[type="checkbox"] {
   margin-top: 12px;
 }
 .landing-preview .fit-block p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--green);
   line-height: 1.8;
 }
@@ -2162,7 +2162,7 @@ input[type="checkbox"] {
   justify-content: space-between;
   color: var(--green);
   margin-top: 22px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .preview-bottom span {
   display: flex;
@@ -2178,7 +2178,7 @@ input[type="checkbox"] {
   align-items: center;
   gap: 8px;
   border-radius: 6px;
-  font-size: 10px;
+  font-size: 12px;
   box-shadow: 0 5px 15px #00000005;
   z-index: 1;
 }
@@ -2196,7 +2196,7 @@ input[type="checkbox"] {
 .visual-caption {
   position: absolute;
   bottom: -25px;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.3px;
   color: var(--muted);
 }
@@ -2206,7 +2206,7 @@ input[type="checkbox"] {
   max-width: 1280px;
   margin: auto;
   padding: 30px 50px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   border-top: 1px solid var(--line);
 }
@@ -2237,10 +2237,10 @@ input[type="checkbox"] {
     font-size: 12px;
   }
   .evidence-grid .markdown {
-    font-size: 11px;
+    font-size: 12px;
   }
   .detail-label {
-    font-size: 11px;
+    font-size: 12px;
   }
   .brand {
     font-size: 24px;
@@ -2283,7 +2283,7 @@ input[type="checkbox"] {
     gap: 15px;
   }
   .refresh-button {
-    font-size: 10px;
+    font-size: 12px;
     padding: 8px 10px;
   }
   .suggestion-card {
@@ -2480,7 +2480,7 @@ input[type="checkbox"] {
     gap: 12px;
   }
   .breadcrumb {
-    font-size: 10px;
+    font-size: 12px;
     gap: 9px;
   }
   .main-content {
@@ -2497,13 +2497,13 @@ input[type="checkbox"] {
     letter-spacing: -1px;
   }
   .page-heading p {
-    font-size: 11px;
+    font-size: 12px;
   }
   .refresh-button {
     margin: 0;
   }
   .eyebrow {
-    font-size: 8px;
+    font-size: 12px;
     letter-spacing: 1.3px;
   }
   .demo-controls {
@@ -2521,7 +2521,7 @@ input[type="checkbox"] {
   }
   .app-footer {
     padding: 20px 20px 30px;
-    font-size: 8px;
+    font-size: 12px;
     flex-wrap: wrap;
     gap: 8px;
   }
@@ -2546,7 +2546,7 @@ input[type="checkbox"] {
     padding: 20px;
   }
   .profile-section h3 .badge {
-    font-size: 8px;
+    font-size: 12px;
   }
   .preferences-grid {
     gap: 15px;
@@ -2561,7 +2561,7 @@ input[type="checkbox"] {
     padding: 22px;
   }
   .onboarding-copy > .eyebrow {
-    font-size: 7px;
+    font-size: 12px;
   }
   .progress-panel {
     padding: 25px;
@@ -2618,7 +2618,7 @@ input[type="checkbox"] {
     right: 12px;
   }
   .landing-header ~ .demo-controls label {
-    font-size: 8px;
+    font-size: 12px;
   }
   .landing-header ~ .demo-controls label > svg {
     width: 10px;
@@ -2645,20 +2645,20 @@ input[type="checkbox"] {
   }
   .repo-line {
     gap: 5px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .repo-line > a {
     max-width: 160px;
   }
   .star-count {
-    font-size: 8px;
+    font-size: 12px;
   }
   .issue-title {
     font-size: 16px;
     max-width: 100%;
   }
   .badge {
-    font-size: 8px;
+    font-size: 12px;
   }
   .evidence-grid {
     grid-template-columns: 1fr;
@@ -2676,10 +2676,10 @@ input[type="checkbox"] {
     gap: 13px;
   }
   .confidence {
-    font-size: 8px;
+    font-size: 12px;
   }
   .card-actions .claim {
-    font-size: 9px;
+    font-size: 12px;
     gap: 3px;
     padding: 7px 8px;
   }
@@ -2712,7 +2712,7 @@ input[type="checkbox"] {
     font-size: 12px;
   }
   .subtle-link {
-    font-size: 9px;
+    font-size: 12px;
   }
   .subtle-link svg {
     width: 12px;
@@ -2726,7 +2726,7 @@ input[type="checkbox"] {
   }
   .check-options {
     gap: 15px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .source-actions {
     gap: 0;
@@ -2742,13 +2742,13 @@ input[type="checkbox"] {
     gap: 8px;
   }
   .sourced-value > strong {
-    font-size: 11px;
+    font-size: 12px;
   }
   .source-chip {
-    font-size: 7px;
+    font-size: 12px;
   }
   .field > span:first-child {
-    font-size: 10px;
+    font-size: 12px;
   }
   .onboarding-copy h1 {
     font-size: 25px;
@@ -2767,7 +2767,7 @@ input[type="checkbox"] {
   }
   .filter-tabs > button {
     padding: 10px 10px 12px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .progress-panel {
     padding: 23px 18px;
@@ -2776,7 +2776,7 @@ input[type="checkbox"] {
     font-size: 20px;
   }
   .progress-steps p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .empty-state {
     padding: 40px 20px;
@@ -2785,7 +2785,7 @@ input[type="checkbox"] {
     font-size: 18px;
   }
   .feed-end {
-    font-size: 8px;
+    font-size: 12px;
   }
   .dialog-actions {
     flex-direction: column-reverse;
@@ -2795,7 +2795,7 @@ input[type="checkbox"] {
   }
   .landing-features {
     gap: 12px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .landing-visual {
     margin: 0 8px;
@@ -2818,7 +2818,7 @@ input[type="checkbox"] {
   }
 }
 .draft-button {
-  font-size: 10px;
+  font-size: 12px;
   padding: 8px 11px;
   min-height: 32px;
 }
@@ -2842,7 +2842,7 @@ input[type="checkbox"] {
   font-size: 14px;
 }
 .run-intro p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.9;
   max-width: 610px;
@@ -2862,11 +2862,11 @@ input[type="checkbox"] {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 .run-pipeline-mini > span > span {
-  font-size: 8px;
+  font-size: 12px;
   color: var(--green);
 }
 .run-pipeline-mini svg {
@@ -2924,17 +2924,17 @@ input[type="checkbox"] {
   font-weight: 600;
 }
 .run-row p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.9;
   margin: 6px 0;
 }
 .run-date {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--subtle);
 }
 .run-status {
-  font-size: 8px;
+  font-size: 12px;
   text-transform: capitalize;
 }
 .run-status.completed {
@@ -2946,7 +2946,7 @@ input[type="checkbox"] {
   color: var(--red);
 }
 .back-link {
-  font-size: 11px;
+  font-size: 12px;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -2960,7 +2960,7 @@ input[type="checkbox"] {
   font-size: 28px;
 }
 .run-heading .eyebrow {
-  font-size: 8px;
+  font-size: 12px;
 }
 .run-detail-layout {
   display: grid;
@@ -3003,7 +3003,7 @@ input[type="checkbox"] {
   margin-top: 4px;
 }
 .report-metrics span {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.8;
 }
@@ -3023,12 +3023,12 @@ input[type="checkbox"] {
 }
 .brief-section .markdown {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.9;
 }
 .brief-section ul {
   padding-left: 18px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.9;
   margin-bottom: 0;
@@ -3041,7 +3041,7 @@ input[type="checkbox"] {
   border-radius: 6px;
   background: var(--bg);
   padding: 17px;
-  font-size: 11px;
+  font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   line-height: 1.9;
   white-space: pre-wrap;
@@ -3084,7 +3084,7 @@ input[type="checkbox"] {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.8;
 }
@@ -3110,7 +3110,7 @@ input[type="checkbox"] {
   line-height: 1.9;
 }
 .run-working > span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--subtle);
 }
 .run-stage-panel {
@@ -3131,7 +3131,7 @@ input[type="checkbox"] {
   gap: 8px;
   margin-top: 17px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .run-step {
   width: 21px;
@@ -3140,7 +3140,7 @@ input[type="checkbox"] {
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 50%;
-  font-size: 8px;
+  font-size: 12px;
 }
 .run-stage-panel .complete .run-step {
   background: var(--green);
@@ -3164,7 +3164,7 @@ input[type="checkbox"] {
   font-size: 13px;
 }
 .downloads > p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.9;
   margin: 9px 0 18px;
@@ -3180,7 +3180,7 @@ input[type="checkbox"] {
   background: transparent;
   text-align: left;
   color: var(--green);
-  font-size: 10px;
+  font-size: 12px;
 }
 .download-button > span {
   flex: 1;
@@ -3188,7 +3188,7 @@ input[type="checkbox"] {
 }
 .download-button small {
   display: block;
-  font-size: 8px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -3204,13 +3204,13 @@ input[type="checkbox"] {
   text-transform: capitalize;
 }
 .delivery-panel p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.9;
 }
 .delivery-panel .button {
   margin-top: 15px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .run-log {
   padding: 21px 24px;
@@ -3226,14 +3226,14 @@ input[type="checkbox"] {
   margin: 0;
 }
 .run-log li {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.9;
   padding: 12px 0;
   border-top: 1px solid var(--line);
 }
 .run-log time {
-  font-size: 8px;
+  font-size: 12px;
   display: inline-block;
   margin-right: 10px;
 }
@@ -3243,7 +3243,7 @@ input[type="checkbox"] {
 }
 .run-log li > span {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 5px;
 }
 .project-layout {
@@ -3281,7 +3281,7 @@ input[type="checkbox"] {
   margin-left: 7px;
 }
 .project-heading p {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.9;
   color: var(--muted);
   margin-top: 8px;
@@ -3320,18 +3320,18 @@ input[type="checkbox"] {
   font-weight: 550;
 }
 .connection-row p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.9;
   margin-top: 5px;
   max-width: 440px;
 }
 .connection-row .text-button {
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .connection-row > .badge {
-  font-size: 8px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .monospace {
@@ -3349,7 +3349,7 @@ input[type="checkbox"] {
   color: var(--text);
 }
 .advanced-settings > summary > span {
-  font-size: 10px;
+  font-size: 12px;
   margin-left: auto;
 }
 .advanced-settings[open] > summary {
@@ -3444,15 +3444,15 @@ input[type="checkbox"] {
     font-size: 12px;
   }
   .run-intro p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .run-pipeline-mini {
     gap: 12px;
-    font-size: 8px;
+    font-size: 12px;
     padding-bottom: 26px;
   }
   .run-pipeline-mini > span {
-    font-size: 8px;
+    font-size: 12px;
     gap: 6px;
   }
   .run-pipeline-mini svg {
@@ -3463,10 +3463,10 @@ input[type="checkbox"] {
     gap: 12px;
   }
   .run-row-top > strong {
-    font-size: 11px;
+    font-size: 12px;
   }
   .run-row p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .run-row > .run-state-icon {
     width: 33px;
@@ -3479,7 +3479,7 @@ input[type="checkbox"] {
     gap: 7px;
   }
   .run-date {
-    font-size: 8px;
+    font-size: 12px;
   }
   .project-layout > aside {
     display: block;
@@ -3494,13 +3494,13 @@ input[type="checkbox"] {
     font-size: 12px;
   }
   .project-heading p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .project-heading > svg {
     width: 18px;
   }
   .project-card .checkbox-field {
-    font-size: 10px;
+    font-size: 12px;
   }
   .connection-row {
     gap: 9px;
@@ -3518,7 +3518,7 @@ input[type="checkbox"] {
   .advanced-settings > summary > span {
     margin-left: 24px;
     width: 100%;
-    font-size: 9px;
+    font-size: 12px;
   }
   .run-heading h1 {
     font-size: 25px;
@@ -3536,14 +3536,14 @@ input[type="checkbox"] {
     font-size: 12px;
   }
   .report-metrics span {
-    font-size: 8px;
+    font-size: 12px;
   }
   .run-detail-main > .filter-tabs {
     gap: 0;
     flex-wrap: wrap;
   }
   .run-detail-main > .filter-tabs > button {
-    font-size: 10px;
+    font-size: 12px;
     padding: 10px 9px 13px;
   }
   .run-detail-aside {
@@ -3565,7 +3565,7 @@ input[type="checkbox"] {
     gap: 7px;
   }
   .draft-button {
-    font-size: 9px;
+    font-size: 12px;
     gap: 5px;
   }
 }
@@ -3604,7 +3604,7 @@ input[type="checkbox"] {
   .run-detail-main > .filter-tabs > button {
     padding-left: 7px;
     padding-right: 7px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .report-content {
     padding: 17px;
@@ -3616,7 +3616,7 @@ input[type="checkbox"] {
     padding: 18px;
   }
   .connection-row > .badge {
-    font-size: 8px;
+    font-size: 12px;
   }
   .run-date {
     overflow-wrap: anywhere;
@@ -3629,7 +3629,7 @@ input[type="checkbox"] {
     margin-right: auto;
   }
   .card-actions .claim {
-    font-size: 9px;
+    font-size: 12px;
   }
   .draft-button {
     padding: 7px 9px;
@@ -3645,5 +3645,266 @@ input[type="checkbox"] {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Desktop polish: one text size inside panels, and room between stacked settings sections. */
+.run-issue p {
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.run-issue .validation-facts {
+  margin: 2px 0 10px;
+}
+.run-issue .field-hint {
+  margin: 3px 0;
+}
+.run-issue details {
+  margin: 8px 0 12px;
+}
+.run-issue summary {
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.run-issue details .code-view {
+  margin-top: 8px;
+  max-height: 260px;
+  overflow: auto;
+}
+.settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.model-stage + .model-stage {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.model-stage > h3 {
+  margin: 0;
+}
+.model-stage > .field-hint {
+  margin: 4px 0 14px;
+}
+.setup-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 20px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+}
+.timeline li > a.text-button {
+  margin-top: 2px;
+}
+/* Main gets focus after each page change so screen readers start there; it isn't a control, so no ring. */
+main[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+/* A disabled checkbox looks and acts disabled; its reason sits under the label text. */
+input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+}
+.checkbox-field:has(input:disabled) {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.checkbox-field:has(+ .checkbox-hint) {
+  margin-bottom: 4px;
+}
+.checkbox-hint {
+  margin: 0 0 22px 24px;
+}
+/* Avatars are fixed circles: they never shrink in a flex row, and names truncate instead. */
+.account-avatar,
+.small-avatar,
+.github-avatar {
+  flex: none;
+  overflow: hidden;
+}
+.avatar-img {
+  display: block;
+}
+.sidebar-account > div,
+.account-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.sidebar-account strong,
+.sidebar-account div > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-row strong {
+  overflow-wrap: anywhere;
+}
+.sidebar-account .icon-button,
+.account-row > .badge {
+  flex: none;
+}
+/* Scrollbars in theme colors for every scroll area: the page, panels, textareas and code blocks. Electron is
+   Chromium only, so ::-webkit-scrollbar is enough. The standard scrollbar-color has no hover color and, once set,
+   turns these rules off, so it isn't used. */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: var(--tag);
+}
+::-webkit-scrollbar-thumb {
+  min-width: 40px;
+  min-height: 40px;
+  border: 3px solid transparent;
+  border-radius: 6px;
+  background: var(--subtle) padding-box;
+}
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--green);
+}
+/* Windows desktop title bar (src/main.tsx). Windows draws its window controls over the right end in the same
+   colors (THEMES in electron/main.js: --sidebar and --text), and the app scrolls in #root below the bar. */
+.has-titlebar {
+  --titlebar: calc(env(titlebar-area-height, 36px) + 1px);
+}
+.window-titlebar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  height: var(--titlebar);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sidebar);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+.window-titlebar .brand-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+}
+.has-titlebar body {
+  overflow: hidden;
+}
+.has-titlebar #root {
+  height: calc(100vh - var(--titlebar));
+  margin-top: var(--titlebar);
+  overflow: auto;
+}
+.has-titlebar .app-shell,
+.has-titlebar .startup {
+  min-height: 100%;
+}
+.has-titlebar .sidebar {
+  height: calc(100vh - var(--titlebar));
+}
+/* Short windows and high display scaling: the sidebar drops its tagline and the "Tune your scout" shortcut (the
+   nav has Your profile), and scrolls with a slim bar only if it still doesn't fit, instead of cutting off the
+   account row. */
+.sidebar {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  border-width: 2px;
+}
+@media (max-height: 640px) {
+  .sidebar-message,
+  .sidebar-preferences {
+    display: none;
+  }
+}
+.has-titlebar .skip-link:focus {
+  top: calc(var(--titlebar) + 10px);
+}
+/* Dropdowns: native selects in the theme. Chromium's customizable select styles the menu and its options and
+   keeps native keyboard use (arrows, type-ahead, Escape) and placement that flips away from window edges. The
+   demo's hidden overlay select keeps the classic menu. */
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+@supports (appearance: base-select) {
+  select:not(.demo-controls select),
+  ::picker(select) {
+    appearance: base-select;
+  }
+  select:not(.demo-controls select) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  select:disabled {
+    cursor: not-allowed;
+  }
+  select::picker-icon {
+    color: var(--muted);
+  }
+  select:open {
+    border-color: var(--green-border);
+  }
+  ::picker(select) {
+    /* Open below the field, and flip above only when the menu doesn't fit there. */
+    position-try-order: normal;
+    position-try-fallbacks: flip-block;
+    margin-block: 4px;
+    padding: 4px;
+    max-block-size: min(320px, 70vh);
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 10px 28px #0000002e;
+  }
+  option {
+    padding: 7px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  option:hover {
+    background: var(--tag);
+  }
+  option:focus-visible {
+    background: var(--green-light);
+    outline: 2px solid var(--green);
+    outline-offset: -2px;
+  }
+  option:checked {
+    color: var(--green);
+    font-weight: 650;
+  }
+  option::checkmark {
+    color: var(--green);
+  }
+  option:disabled {
+    color: var(--subtle);
+    cursor: not-allowed;
   }
 }

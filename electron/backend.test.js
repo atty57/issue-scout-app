@@ -15,7 +15,7 @@ beforeEach(() => {
   requests = [];
   repo = structuredClone(repository);
   missingFile = false;
-  store = { get: (id) => saved.get(id), set: vi.fn((id, value) => saved.set(id, value)) };
+  store = { get: (id) => saved.get(id), set: vi.fn((id, value) => saved.set(id, value)), forget: vi.fn((id) => saved.delete(id)) };
   fetchImpl = vi.fn(async (url, options = {}) => {
     requests.push({ url, ...options });
     let data = repo;
@@ -34,6 +34,15 @@ beforeEach(() => {
   });
 });
 afterEach(() => vi.unstubAllGlobals());
+
+it("colors the window's title bar for the light or dark theme only, without needing a sign-in", async () => {
+  const setWindowTheme = vi.fn();
+  const themed = createBackend({ tokens: { load: () => null, clear() {} }, repositories: store, setWindowTheme, fetchImpl: vi.fn() });
+  expect(await themed("/api/window/theme", "PUT", { theme: "dark" })).toEqual([204]);
+  for (const body of [{ theme: "#ff0000" }, { theme: "Dark" }, undefined])
+    expect((await themed("/api/window/theme", "PUT", body))[0]).toBe(422);
+  expect(setWindowTheme.mock.calls).toEqual([["dark"]]);
+});
 
 it("sends a signed-in user without a saved repository to desktop onboarding", async () => {
   expect(await backend("/api/me")).toEqual([200, { login: user.login, avatar_url: user.avatar_url, onboarding: "needs_repository" }]);
@@ -76,6 +85,19 @@ it.each([
   Object.assign(repo, change);
   expect((await backend("/api/repository", "POST", { mode: "connect", repo: "octocat/issue-scout" }))[0]).toBe(422);
   expect(store.set).not.toHaveBeenCalled();
+});
+
+it("forgets the saved repository on this computer only, so setup opens again", async () => {
+  saved.set(7, { id: 42, full_name: "octocat/issue-scout" });
+  saved.set(8, { id: 43, full_name: "hubot/issue-scout" });
+  requests = [];
+  expect(await backend("/api/repository", "DELETE")).toEqual([200, { login: user.login, avatar_url: user.avatar_url, onboarding: "needs_repository" }]);
+  expect([...saved.keys()]).toEqual([8]); // another account's choice stays
+  expect(requests.map((request) => [request.method ?? "GET", request.url])).toEqual([["GET", "https://api.github.com/user"]]); // nothing on GitHub changes
+  expect((await backend("/api/me"))[1].onboarding).toBe("needs_repository");
+  token = null;
+  expect((await backend("/api/repository", "DELETE"))[0]).toBe(401);
+  expect(store.forget).toHaveBeenCalledTimes(1);
 });
 
 it("does not remember a repository missing Scout files", async () => {

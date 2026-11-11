@@ -25,6 +25,18 @@ it("persists account-specific references across restarts without arbitrary field
   expect(readFileSync(file, "utf8")).not.toContain("never-save-this");
 });
 
+it("forgets one account's repository and keeps the others", () => {
+  const store = createRepositoryStore(file);
+  store.set(7, { id: 42, full_name: "octocat/scout" });
+  store.set(8, { id: 43, full_name: "other/scout" });
+  store.forget(7);
+  const restarted = createRepositoryStore(file);
+  expect(restarted.get(7)).toBeUndefined();
+  expect(restarted.get(8)).toEqual({ id: 43, full_name: "other/scout" });
+  restarted.forget(99); // nothing saved for that account
+  expect(createRepositoryStore(file).get(8)).toEqual({ id: 43, full_name: "other/scout" });
+});
+
 it.each(["broken json", "[]", "null", '{"7":{"id":42,"full_name":"../escape"}}'])("lets a user reconnect after a damaged local selection: %s", (content) => {
   writeFileSync(file, content);
   const store = createRepositoryStore(file);

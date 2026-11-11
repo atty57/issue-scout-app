@@ -13,6 +13,47 @@ import { ApiError, errorMessage } from "../errors";
 import type { Connection, ScoutSettings as ScoutSettingsType } from "../types";
 import { ErrorState, ListField, Loading, fieldErrors, joinList, parseList, useResource } from "../components/ui";
 import ModelSettings from "./ModelSettings";
+import ScheduleSettings from "./ScheduleSettings";
+import EmailSettings from "./EmailSettings";
+import { PageHeader } from "../components/beautiful";
+
+export type ScoutSection = "discovery" | "models" | "schedule" | "email";
+export const scoutSections = [
+  { id: "discovery", label: "Discovery", path: "/scout-settings" },
+  { id: "models", label: "Models", path: "/scout-settings/models" },
+  { id: "schedule", label: "Schedule", path: "/scout-settings/schedule" },
+  { id: "email", label: "Email", path: "/scout-settings/email" },
+] as const;
+
+export default function ScoutSettings({ section = "discovery" }: { section?: ScoutSection }) {
+  return isMock ? <DiscoverySettings /> : <DesktopSettings section={section} />;
+}
+
+function DesktopSettings({ section }: { section: ScoutSection }) {
+  const email = useResource(() => api.email());
+  const emailAvailable = email.data?.available === true;
+  // A failed check keeps the Email section, where its error and retry show; only "no relay" hides it.
+  const showEmail = emailAvailable || !!email.error;
+  // Saving models can finish setup; Schedule's own copy of that flag is from when it loaded.
+  const [setupFinished, setSetupFinished] = useState(false);
+  return <>
+    <PageHeader title="Scout settings" description="Configure how Scout finds issues, runs and delivers your reports." />
+    <nav className="settings-sections" aria-label="Scout settings sections">
+      {scoutSections.filter(item => item.id !== "email" || showEmail).map(item => <a
+        key={item.id} href={`#${item.path}`} aria-current={section === item.id ? "page" : undefined}
+      >{item.label}</a>)}
+    </nav>
+    {/* Keep editors mounted across section changes: typed credentials and unsaved drafts stay in memory only. */}
+    <div className="settings-pane" hidden={section !== "discovery"}><DiscoverySettings /></div>
+    <div className="settings-pane" hidden={section !== "models"}><ModelSettings onSaved={(models) => setSetupFinished(models.ready)} /></div>
+    <div className="settings-pane" hidden={section !== "schedule"}><ScheduleSettings setupFinished={setupFinished} /></div>
+    <div className="settings-pane" hidden={section !== "email"}>
+      {emailAvailable ? <EmailSettings /> : email.loading ? <Loading label="Checking email availability…" />
+        : email.error ? <ErrorState message={email.error} retry={email.reload} />
+          : <div className="panel empty-state"><h2>Email is unavailable</h2><p>This build has no email relay configured.</p></div>}
+    </div>
+  </>;
+}
 
 const countFields: [keyof ScoutSettingsType, string, string][] = [
   [
@@ -61,7 +102,7 @@ const countFields: [keyof ScoutSettingsType, string, string][] = [
     "Total attempts per issue, including retries.",
   ],
 ];
-export default function ScoutSettings() {
+function DiscoverySettings() {
   const resource = useResource(() => api.scoutSettings());
   return resource.loading ? (
     <Loading label="Loading scout settings…" />
@@ -178,7 +219,7 @@ function Editor({ initial, onReload }: { initial: ScoutSettingsType; onReload: (
   }
   return (
     <>
-      <div className="page-heading">
+      {isMock && <div className="page-heading">
         <div>
           <span className="eyebrow">MAKE THE WHOLE WORKFLOW YOURS</span>
           <h1>
@@ -192,7 +233,7 @@ function Editor({ initial, onReload }: { initial: ScoutSettingsType; onReload: (
           <SlidersHorizontal size={15} />
           Skills & matching
         </a>
-      </div>
+      </div>}
       {notice && (
         <div className="notice" role="status">
           <Check size={16} />
@@ -240,7 +281,6 @@ function Editor({ initial, onReload }: { initial: ScoutSettingsType; onReload: (
           ))
         )}
       </section>}
-      {!isMock && <ModelSettings />}
       <form onSubmit={save} noValidate>
         <fieldset disabled={busy}>
           <div className="scout-settings-layout">
@@ -466,9 +506,10 @@ function Editor({ initial, onReload }: { initial: ScoutSettingsType; onReload: (
               </p>
               <h3>Supported contributions</h3>
               <p>
-                Python, JavaScript, TypeScript, C#, C, and documentation. Your
-                scout checks whether each repository can be validated in an
-                available runtime.
+                Python, JavaScript, TypeScript, C#, C and documentation, plus Go,
+                Rust, Java and C++ in Scout repositories created from the latest
+                template. Your scout checks whether each repository can be
+                validated in an available runtime.
               </p>
               <Clock3 size={21} />
               <h3>Retries with context.</h3>

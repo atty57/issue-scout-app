@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "outcome": "no_pick",
+  "reason": "No issue was picked: no candidate passed the profile, score and feasibility checks",
+  "issue": null,
+  "fix": null,
+  "report_file": null,
+  "patch_file": null,
+  "patch_withheld_reason": null,
+  "notification": null
+}

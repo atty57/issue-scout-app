@@ -95,7 +95,7 @@ export function SuggestionCard({
     setError("");
     try {
       const run = await api.startRun(suggestion.id);
-      window.location.hash = `/runs/${run.id}`;
+      window.location.hash = "pending" in run ? "/runs" : `/runs/${run.id}`;
     } catch (error) {
       setError(errorMessage(error));
     } finally {

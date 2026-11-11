@@ -1,0 +1,45 @@
+Pydantic validation returns wrong result for nested input
+https://github.com/acme/core/issues/3
+
+Why this one: Focused regression fix
+Work type: code | language: python
+Scout score: 17 | suitability confidence: unknown
+Validation feasibility: Python package and pytest suite
+AI policy: none
+
+Tests: pass | new test fails on the unfixed code: yes | Provider: claude-code | Usage cost: not reported
+
+1) Claim it now. Comment on the issue:
+Review detail
+
+Root cause:
+Review detail
+
+Approach:
+Review detail
+
+Risks:
+Review detail
+
+Not verified:
+Review detail
+
+Questions a maintainer may ask:
+- Expected behavior confirmed
+
+Before opening the PR:
+- Review patch
+
+Commit message:
+Review detail
+
+PR title: Review detail
+
+PR body:
+Review detail
+
+Validation log:
+Targeted tests passed
+
+Regression verification log:
+SCOUT_REGRESSION:1 assertion failed

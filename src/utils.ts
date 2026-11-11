@@ -4,6 +4,10 @@ export const languageNames: Record<string, string> = {
   javascript: "JavaScript",
   csharp: "C#",
   c: "C",
+  go: "Go",
+  rust: "Rust",
+  java: "Java",
+  cpp: "C++",
   none: "Language independent",
 };
 export function safeHttps(value: string): string | undefined {

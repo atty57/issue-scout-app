@@ -30,7 +30,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Runs from "./pages/Runs";
 import Projects from "./pages/Projects";
-import ScoutSettings from "./pages/ScoutSettings";
+import ScoutSettings, { scoutSections, type ScoutSection } from "./pages/ScoutSettings";
 
 const navigation = [
   { route: "/", label: "Your shortlist", icon: LayoutGrid },
@@ -45,6 +45,10 @@ const navigation = [
   },
   { route: "/settings", label: "Account", icon: SettingsIcon },
 ];
+// Desktop: the engine keeps no shortlist, suggestion feedback or project evidence, so those pages are demo-only.
+// The desktop home is Runs & reports.
+const DEMO_ONLY_ROUTES = ["/", "/projects"];
+const pages = isMock ? navigation : navigation.filter((item) => !DEMO_ONLY_ROUTES.includes(item.route));
 const scenarios: [DemoScenario, string][] = [
   ["ready", "Ready · daily shortlist"],
   ["signed_out", "Landing · signed out"],
@@ -65,6 +69,14 @@ export default function App() {
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
   const [route, setRoute] = useState(currentRoute);
+  const page = !isMock && route === "/" ? "/runs" : route;
+  // A run page (/runs/<id>) belongs to Runs & reports.
+  const current = (route: string) => page === route || (route !== "/" && page.startsWith(route + "/"));
+  // An unknown settings address opens Discovery instead of a dead end under a selected "Scout settings".
+  const settingSection = scoutSections.find(item => item.path === page)
+    ?? (!isMock && page.startsWith("/scout-settings/") ? scoutSections[0] : undefined);
+  const pageLabel = me?.onboarding === "needs_repository" ? "Repository setup"
+    : settingSection ? `Scout settings · ${settingSection.label}` : pages.find((item) => current(item.route))?.label;
   const [scenario, setScenario] = useState<DemoScenario>("ready");
   const [dark, setDark] = useState(() => {
     try {
@@ -74,6 +86,7 @@ export default function App() {
     }
   });
   const lastUpload = useRef<{ file?: File } | undefined>(undefined);
+  const lastRoute = useRef("");
   useEffect(() => {
     const update = () => setRoute(currentRoute());
     const accountChanged = () => setRevision((value) => value + 1);
@@ -91,6 +104,8 @@ export default function App() {
     } catch {
       /* Storage can be unavailable in private browsing. */
     }
+    // The window's title bar follows; it keeps its colors if this fails.
+    if (!isMock) api.windowTheme(dark ? "dark" : "light").catch(() => {});
   }, [dark]);
   useEffect(() => {
     let active = true;
@@ -111,9 +126,14 @@ export default function App() {
     };
   }, [revision]);
   useEffect(() => {
-    document.title = `${me ? navigation.find((item) => item.route === route)?.label || "Welcome" : "Find your next contribution"} · Issue Scout`;
+    document.title = `${me ? pageLabel || "Welcome" : "Find your next contribution"} · Issue Scout`;
+    // Moving between settings sections keeps keyboard focus on the section links and the scroll position.
+    const withinSettings = lastRoute.current.startsWith("/scout-settings") && route.startsWith("/scout-settings");
+    lastRoute.current = route;
+    if (withinSettings) return;
     document.getElementById("main-content")?.focus();
     window.scrollTo?.(0, 0);
+    document.getElementById("root")?.scrollTo?.(0, 0); // with the Windows title bar, #root is what scrolls
   }, [route, me?.onboarding]);
   function signedOut() {
     setMe(null);
@@ -122,7 +142,7 @@ export default function App() {
   }
   function signedIn(value: Me) {
     setMe(value);
-    if (!isMock && value.repository && currentRoute() === "/") window.location.hash = "/profile";
+    if (!isMock && value.repository && currentRoute() === "/") window.location.hash = "/runs";
   }
   function uploaded(id: string, file?: File) {
     lastUpload.current = { file };
@@ -211,6 +231,26 @@ export default function App() {
         {demoControl}
       </div>
     );
+  if (me === null && !isMock) return (
+    <div className="desktop-signin">
+      <header className="signin-header"><Logo />{themeButton}</header>
+      <main id="main-content" tabIndex={-1} className="signin-layout">
+        <section className="signin-copy">
+          <span className="eyebrow">YOUR OPEN-SOURCE WORKSPACE</span>
+          <h1>From the right issue to a reviewable fix.</h1>
+          <p>Scout finds issues that fit your skills, prepares a draft and checks it in an isolated runtime. You review the evidence and decide what to contribute.</p>
+          <DesktopSignIn onSignedIn={signedIn} onError={error => setError(errorMessage(error))} />
+          {error && <ErrorState message={error} />}
+        </section>
+        <ol className="signin-steps" aria-label="Getting started">
+          <li><span>01</span><div><strong>Connect your GitHub</strong><p>Sign in securely in your browser. Your credentials stay out of the interface.</p></div></li>
+          <li><span>02</span><div><strong>Make Scout yours</strong><p>Create or connect a private Scout repository, set your profile and choose your models.</p></div></li>
+          <li><span>03</span><div><strong>Run, inspect, contribute</strong><p>Your GitHub Actions run Scout. Reports and available patches are saved for your review.</p></div></li>
+        </ol>
+      </main>
+      <footer className="signin-privacy">Scouting uses your GitHub Actions minutes and model credentials. Optional report emails are delivered by Issue Scout.</footer>
+    </div>
+  );
   if (me === null)
     return (
       <>
@@ -231,9 +271,9 @@ export default function App() {
               can make a <em>difference.</em>
             </h1>
             <p>
-              Find open-source issues that fit your resume, GitHub, and
-              projects. Let your scout prepare a fix and validate it, then
-              review the evidence and make the contribution yours.
+              {isMock
+                ? "Find open-source issues that fit your resume, GitHub, and projects. Let your scout prepare a fix and validate it, then review the evidence and make the contribution yours."
+                : "Find open-source issues that fit your skills and interests. Your scout runs in your own private GitHub repository, prepares a fix and validates it, then you review the evidence and make the contribution yours."}
             </p>
             {isMock ? (
               <button
@@ -323,7 +363,7 @@ export default function App() {
       </>
     );
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isMock ? "demo-shell" : "desktop-shell"}`}>
       <a
         className="skip-link"
         href="#main-content"
@@ -340,18 +380,18 @@ export default function App() {
         </a>
         <div className="workspace-label">YOUR WORKSPACE</div>
         <nav aria-label="Main navigation">
-          {navigation.map(({ route: href, label, icon: Icon }) => (
+          {pages.map(({ route: href, label, icon: Icon }) => (
             <a
               key={href}
               href={`#${href}`}
               aria-label={label}
               title={label}
-              className={`nav-link ${route === href ? "active" : ""}`}
-              aria-current={route === href ? "page" : undefined}
+              className={`nav-link ${current(href) ? "active" : ""}`}
+              aria-current={current(href) ? "page" : undefined}
             >
               <Icon size={18} strokeWidth={1.7} />
               <span>{label}</span>
-              {route === href && <span className="nav-active-dot" />}
+              {current(href) && <span className="nav-active-dot" />}
             </a>
           ))}
         </nav>
@@ -378,7 +418,7 @@ export default function App() {
               </Avatar>
             </span>
             <div>
-              <strong>{me.login}</strong>
+              <strong title={me.login}>{me.login}</strong>
               <span title={me.repository?.full_name}>{me.repository?.full_name || "Personal workspace"}</span>
             </div>
             <button
@@ -405,8 +445,7 @@ export default function App() {
             <span>Workspace</span>
             <span className="breadcrumb-slash">/</span>
             <strong>
-              {navigation.find((item) => item.route === route)?.label ||
-                "Welcome"}
+              {pageLabel || "Welcome"}
             </strong>
           </div>
           <div className="topbar-right">
@@ -447,29 +486,29 @@ export default function App() {
                 onRetry={() => void retryBuild()}
               />
             </div>
-          ) : route === "/" ? (
+          ) : page === "/" ? (
             <Feed />
-          ) : route === "/runs" || route.startsWith("/runs/") ? (
+          ) : page === "/runs" || page.startsWith("/runs/") ? (
             <Runs
-              id={route.startsWith("/runs/") ? route.slice(6) : undefined}
+              id={page.startsWith("/runs/") ? page.slice(6) : undefined}
             />
-          ) : route === "/projects" ? (
+          ) : page === "/projects" && isMock ? (
             <Projects />
-          ) : route === "/scout-settings" ? (
-            <ScoutSettings />
-          ) : route === "/profile" ? (
+          ) : page === "/scout-settings" || (!isMock && settingSection) ? (
+            <ScoutSettings section={(settingSection?.id || "discovery") as ScoutSection} />
+          ) : page === "/profile" ? (
             <Profile />
-          ) : route === "/history" ? (
+          ) : page === "/history" ? (
             <HistoryPage />
-          ) : route === "/settings" ? (
-            <Settings me={me} onSignedOut={signedOut} onUploaded={uploaded} />
+          ) : page === "/settings" ? (
+            <Settings me={me} onSignedOut={signedOut} onUploaded={uploaded} onRepositoryChanged={setMe} />
           ) : (
             <div className="empty-state panel">
               <Compass size={32} />
               <h1>This trail ends here.</h1>
               <p>Let’s get you back to your next contribution.</p>
-              <a className="button primary" href="#/">
-                Back to your shortlist
+              <a className="button primary" href={isMock ? "#/" : "#/runs"}>
+                {isMock ? "Back to your shortlist" : "Back to your runs"}
               </a>
             </div>
           )}

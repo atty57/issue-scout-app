@@ -23,15 +23,17 @@ beforeEach(() => {
       { id: "groq", label: "Groq", credentials: { "api-key": "GROQ_API_KEY" }, model: "optional", model_hint: "" },
       { id: "claude-code", label: "Claude Code", credentials: { subscription: "CLAUDE_CODE_OAUTH_TOKEN" }, model: "optional", model_hint: "" },
     ],
-    secrets: [], picker: { provider: "groq", auth: "api-key", model: "", base_url: "" }, solver: { provider: "claude-code", auth: "subscription", model: "", base_url: "" },
+    secrets: [], picker: { provider: "groq", auth: "api-key", model: "", base_url: "" }, solver: { provider: "claude-code", auth: "subscription", model: "", base_url: "" }, ready: false,
   });
+  vi.spyOn(api, "schedule").mockResolvedValue({ revision: "42:main:sha", enabled: false, custom: false, time: "09:30", timezone: "UTC", setup_required: false });
+  vi.spyOn(api, "email").mockResolvedValue({ available: false });
 });
 
-it("opens the profile editor for a connected desktop account", async () => {
+it("opens Runs as the primary workspace for a connected desktop account", async () => {
   vi.spyOn(api, "me").mockResolvedValue({ login: "octocat", avatar_url: "", onboarding: "ready", repository: { id: 42, full_name: "octocat/scout", html_url: "https://github.com/octocat/scout" } });
   render(<App />);
-  expect(await screen.findByRole("heading", { name: /Your profile, in your hands/ })).toBeInTheDocument();
-  expect(window.location.hash).toBe("#/profile");
+  expect(await screen.findByRole("heading", { name: "Your runs & reports" })).toBeInTheDocument();
+  expect(window.location.hash).toBe("#/runs");
 });
 
 it("keeps the revision on a profile edit and omits unsupported lock controls", async () => {
@@ -43,6 +45,26 @@ it("keeps the revision on a profile edit and omits unsupported lock controls", a
   fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
   await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({ summary: "My updated skills", revision: profile.revision, scouting: expect.objectContaining({ exclude_labels: ["type: bug, regression"] }) })));
   expect(await screen.findByRole("status")).toHaveTextContent("Profile saved");
+});
+
+it("offers Go, Rust, Java and C++ only when the Scout repository's engine runs them", async () => {
+  const options = () => [...(screen.getAllByRole("combobox", { name: /Language 1/ })[0] as HTMLSelectElement).options].map((option) => option.text);
+  const all = ["Python", "TypeScript", "JavaScript", "C#", "C", "Go", "Rust", "Java", "C++"];
+  vi.spyOn(api, "profile").mockResolvedValueOnce({ ...structuredClone(profile), supported_languages: ["python", "javascript", "typescript", "csharp", "c", "go", "rust", "java", "cpp"] });
+  const { unmount } = render(<Profile />);
+  fireEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+  expect(options()).toEqual(all);
+  expect(screen.queryByText(/need a Scout repository created from the latest/)).not.toBeInTheDocument();
+  unmount();
+  // An engine from before scout.json runs only the first five; a newer language already saved stays visible.
+  vi.spyOn(api, "profile").mockResolvedValueOnce({
+    ...structuredClone(profile), languages: [{ value: "go", sources: ["profile.json"], locked: true }],
+    supported_languages: ["python", "javascript", "typescript", "csharp", "c"],
+  });
+  render(<Profile />);
+  fireEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
+  expect(options()).toEqual(["Python", "TypeScript", "JavaScript", "C#", "C", "Go"]);
+  expect(screen.getByText("Go, Rust, Java, C++ need a Scout repository created from the latest Issue Scout template.")).toBeInTheDocument();
 });
 
 it("keeps a conflicting profile draft until the user chooses to reload", async () => {
@@ -70,7 +92,10 @@ it("saves supported scouting settings with their revision and hides unavailable 
   const save = vi.spyOn(api, "saveScoutSettings").mockResolvedValue(settings);
   render(<ScoutSettings />);
   await screen.findByRole("heading", { name: "Discovery signals" });
+  // Discovery no longer mixes scheduling into the same screen. Its own section remains linked.
   expect(screen.queryByRole("checkbox", { name: /Run my scout automatically/ })).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Schedule" })).toHaveAttribute("href", "#/scout-settings/schedule");
+  expect(screen.queryByRole("checkbox", { name: /Draft a fix/ })).not.toBeInTheDocument();
   expect(screen.queryByRole("checkbox", { name: /Email my review/ })).not.toBeInTheDocument();
   expect(connections).not.toHaveBeenCalled();
   fireEvent.change(screen.getByRole("textbox", { name: /Code issue labels/ }), { target: { value: "bug\nhelp wanted" } });
@@ -86,10 +111,69 @@ it("preserves commas in existing labels when saving unrelated scouting settings"
   await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({ labels: ["type: bug, regression"], documentation_labels: ["docs, help"] })));
 });
 
+it("keeps independent Discovery, Models, Schedule and Email drafts while changing settings sections", async () => {
+  vi.spyOn(api, "email").mockResolvedValue({ available: true, ready: true, revision: "42:main:email", email: "", enabled: false, confirmed: false, code_sent: false });
+  const discoverySave = vi.spyOn(api, "saveScoutSettings");
+  const modelsSave = vi.spyOn(api, "saveModels");
+  const scheduleSave = vi.spyOn(api, "saveSchedule");
+  const emailSave = vi.spyOn(api, "saveEmail");
+  const view = render(<ScoutSettings />);
+  fireEvent.change(await screen.findByRole("textbox", { name: /Code issue labels/ }), { target: { value: "bug\nregression" } });
+  expect(screen.getByRole("link", { name: "Email" })).toHaveAttribute("href", "#/scout-settings/email");
+  view.rerender(<ScoutSettings section="models" />);
+  fireEvent.change(await screen.findByLabelText(/Groq API key/), { target: { value: "typed-only-in-memory" } });
+  view.rerender(<ScoutSettings section="schedule" />);
+  fireEvent.click(await screen.findByRole("checkbox", { name: /Run my scout automatically/ }));
+  fireEvent.change(screen.getByLabelText("Daily run time"), { target: { value: "11:45" } });
+  view.rerender(<ScoutSettings section="email" />);
+  fireEvent.change(await screen.findByLabelText(/^Email address/), { target: { value: "new@example.com" } });
+  view.rerender(<ScoutSettings section="discovery" />);
+  expect(screen.getByRole("textbox", { name: /Code issue labels/ })).toHaveValue("bug\nregression");
+  expect(screen.getByLabelText(/Groq API key/)).not.toBeVisible();
+  view.rerender(<ScoutSettings section="models" />);
+  expect(screen.getByLabelText(/Groq API key/)).toHaveValue("typed-only-in-memory");
+  view.rerender(<ScoutSettings section="schedule" />);
+  expect(screen.getByLabelText("Daily run time")).toHaveValue("11:45");
+  view.rerender(<ScoutSettings section="email" />);
+  expect(screen.getByLabelText(/^Email address/)).toHaveValue("new@example.com");
+  expect(screen.getByRole("checkbox", { name: /Email me each/ })).toBeDisabled();
+  [discoverySave, modelsSave, scheduleSave, emailSave].forEach(save => expect(save).not.toHaveBeenCalled());
+});
+
 it("offers to reload scouting settings after a conflict", async () => {
   vi.spyOn(api, "saveScoutSettings").mockRejectedValue(new ApiError(409, "Profile changed on GitHub."));
   render(<ScoutSettings />);
   fireEvent.click(await screen.findByRole("button", { name: "Save scout settings" }));
   fireEvent.click(await screen.findByRole("button", { name: "Reload latest settings" }));
   await waitFor(() => expect(api.scoutSettings).toHaveBeenCalledTimes(2));
+});
+
+it("keeps the Email section, with its error and a retry, when the email check fails", async () => {
+  vi.spyOn(api, "email").mockRejectedValue(new ApiError(503, "GitHub is unavailable."));
+  render(<ScoutSettings section="email" />);
+  expect(await screen.findByRole("link", { name: "Email" })).toHaveAttribute("aria-current", "page");
+  expect(screen.getByText("GitHub is unavailable.")).toBeInTheDocument();
+  // No relay in this build is the only case that hides it.
+  vi.spyOn(api, "email").mockResolvedValue({ available: false });
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  await waitFor(() => expect(screen.queryByRole("link", { name: "Email" })).not.toBeInTheDocument());
+});
+
+it("drops Schedule's finish-setup hint once Models saves a complete setup, and points to Models until then", async () => {
+  vi.spyOn(api, "schedule").mockResolvedValue({ revision: "42:main:sha", enabled: false, custom: false, time: "09:30", timezone: "UTC", setup_required: true });
+  const models = await api.models();
+  vi.spyOn(api, "saveModels").mockResolvedValue({ ...models, ready: true });
+  render(<ScoutSettings section="models" />);
+  expect(await screen.findByText(/save a model and key for both stages in Models/)).toBeInTheDocument();
+  fireEvent.click(await screen.findByRole("button", { name: "Save models" }));
+  await waitFor(() => expect(screen.queryByText(/Finish setup first/)).not.toBeInTheDocument());
+});
+
+it("opens Discovery for an unknown settings address instead of a dead end", async () => {
+  vi.spyOn(api, "me").mockResolvedValue({ login: "octocat", avatar_url: "", onboarding: "ready", repository: { id: 42, full_name: "octocat/scout", html_url: "https://github.com/octocat/scout" } });
+  vi.spyOn(api, "windowTheme").mockResolvedValue(undefined);
+  window.location.hash = "/scout-settings/nope";
+  render(<App />);
+  expect(await screen.findByRole("link", { name: "Discovery" })).toHaveAttribute("aria-current", "page");
+  expect(screen.queryByText("This trail ends here.")).not.toBeInTheDocument();
 });

@@ -8,12 +8,15 @@ const DEFAULTS = {
   min_stars: 200, exclude_labels: ["good first issue"],
 };
 const COUNTS = ["updated_days", "search_pages", "candidate_limit", "max_comment_pages", "max_timeline_pages", "claim_days", "retry_days", "max_attempts"];
-const PROFILE_FIELDS = new Set(["setup_required", "email", "summary", "skills", "skill_aliases", "languages", "work_types", "labels", "documentation_labels", "watchlist", "merged_in", "days", "scouting"]);
+const PROFILE_FIELDS = new Set(["setup_required", "email", "email_enabled", "summary", "skills", "skill_aliases", "languages", "work_types", "labels", "documentation_labels", "watchlist", "merged_in", "days", "scouting"]);
 const MAX_PROFILE_BYTES = 250000;
-const LANGUAGES = new Set(["python", "javascript", "typescript", "csharp", "c"]);
+// Every language the app knows, as the template's workloads.py names them. Each Scout repository's own engine
+// lists the ones it runs in scout.json; repositories created before that manifest run the first five.
+const LANGUAGES = new Set(["python", "javascript", "typescript", "csharp", "c", "go", "rust", "java", "cpp"]);
+const LANGUAGES_BEFORE_MANIFEST = ["python", "javascript", "typescript", "csharp", "c"];
 const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const validSha = (value) => typeof value === "string" && /^[a-f\d]{40,64}$/i.test(value);
-const canonicalLanguage = (value) => ({ "c#": "csharp", "c sharp": "csharp", js: "javascript", ts: "typescript" })[value.toLowerCase().trim()] || value.toLowerCase().trim();
+const canonicalLanguage = (value) => ({ "c#": "csharp", "c sharp": "csharp", js: "javascript", ts: "typescript", "c++": "cpp", "c plus plus": "cpp", golang: "go" })[value.toLowerCase().trim()] || value.toLowerCase().trim();
 
 function strings(value, key, fields, { search = false, repositories = false } = {}) {
   if (!Array.isArray(value) || value.length > 1000) { fields[key] = "Use a list of at most 1,000 values."; return; }
@@ -103,6 +106,33 @@ export function createProfileRoutes({ repositoryContext, fetchImpl }) {
   const commits = (context, limit) => request(context, `/commits?path=profile.json&sha=${encodeURIComponent(context.repo.default_branch)}&per_page=${limit}`);
   // The last profile.json this app wrote, keyed by its edit revision (repository, branch and blob).
   let written;
+  // Revisions this app itself replaced, each pointing at the one it wrote next. Discovery, Email and Models stay
+  // open together and all write profile.json, so one section's save must not make the next look like a conflict
+  // from elsewhere. Each save only sets its own fields on the latest file, so nothing another section saved is lost.
+  const superseded = new Map();
+  function current(revision) {
+    for (let hops = 0; superseded.has(revision) && hops < 100; hops++) revision = superseded.get(revision);
+    return revision;
+  }
+
+  // The languages this repository's own engine runs, from its scout.json. Without a readable manifest, only the
+  // languages every engine has run are offered, so a profile can't name one the engine rejects at startup.
+  async function engineLanguages(context) {
+    let file;
+    try {
+      file = await request(context, `/contents/scout.json?ref=${encodeURIComponent(context.repo.default_branch)}`);
+    } catch (error) {
+      if (error.status === 404) return LANGUAGES_BEFORE_MANIFEST;
+      throw error;
+    }
+    try {
+      const languages = JSON.parse(Buffer.from(file.content, "base64").toString("utf8")).languages;
+      if (!Array.isArray(languages)) throw new Error();
+      return [...LANGUAGES].filter((language) => languages.includes(language));
+    } catch {
+      return LANGUAGES_BEFORE_MANIFEST;
+    }
+  }
 
   async function read(context) {
     // Read an immutable revision so its content and last-updated date agree.
@@ -118,6 +148,7 @@ export function createProfileRoutes({ repositoryContext, fetchImpl }) {
       if (!object(raw) || Object.keys(raw).some((key) => !PROFILE_FIELDS.has(key)) || (raw.scouting !== undefined && !object(raw.scouting))) throw new Error();
       for (const key of ["skills", "languages", "watchlist", "merged_in", "labels"])
         if (!Array.isArray(raw[key]) || raw[key].some((value) => typeof value !== "string")) throw new Error();
+      if ((raw.email !== undefined && typeof raw.email !== "string") || (raw.email_enabled !== undefined && typeof raw.email_enabled !== "boolean")) throw new Error();
       validateProfile(asProfile(raw, file.sha, commitDate(latest[0].commit)));
       validateSettings(asSettings(raw, file.sha));
     } catch {
@@ -131,11 +162,21 @@ export function createProfileRoutes({ repositoryContext, fetchImpl }) {
     if (!object(value) || typeof value.revision !== "string") throw new GitHubError(409, "Reload the latest profile or settings before saving.");
     if (JSON.stringify(value).length > 250000) throw new GitHubError(422, "Your profile or settings are too large.", { profile: "Use less than 250 KB of profile data." });
     (kind === "profile" ? validateProfile : validateSettings)(value);
+    const supported = kind === "profile" ? await engineLanguages(context) : undefined;
+    if (supported) {
+      const fields = {};
+      value.languages.forEach((row, index) => {
+        if (!supported.includes(row.value))
+          fields[`languages.${index}.value`] = "Your Scout repository's engine doesn't run this language yet. Create a new Scout repository from the latest template to use it.";
+      });
+      invalid(fields);
+    }
     // GitHub can serve the older file for a few seconds after this app's own write, which would make
     // a quick second save look like a conflict. Reuse that write; GitHub's sha check on PUT still
     // rejects any newer change made elsewhere.
-    const previous = written?.key === value.revision ? written : await read(context);
-    if (editRevision(context, previous.revision) !== value.revision) throw new GitHubError(409, "Your profile or repository selection changed on GitHub. Reload the latest version before saving.");
+    const basis = current(value.revision);
+    const previous = written?.key === basis ? written : await read(context);
+    if (editRevision(context, previous.revision) !== basis) throw new GitHubError(409, "Your profile or repository selection changed on GitHub. Reload the latest version before saving.");
     const raw = structuredClone(previous.raw);
     if (kind === "profile") {
       raw.summary = value.summary;
@@ -154,7 +195,9 @@ export function createProfileRoutes({ repositoryContext, fetchImpl }) {
     let { revision, updatedAt } = previous;
     if (JSON.stringify(raw) !== JSON.stringify(previous.raw))
       ({ revision, updatedAt } = await write(context, previous, raw, kind === "profile" ? "Issue Scout: update profile" : "Issue Scout: update scouting settings"));
-    return [200, kind === "profile" ? asProfile(raw, editRevision(context, revision), updatedAt) : asSettings(raw, editRevision(context, revision))];
+    return [200, kind === "profile"
+      ? { ...asProfile(raw, editRevision(context, revision), updatedAt), supported_languages: supported }
+      : asSettings(raw, editRevision(context, revision))];
   }
 
   // Commits `raw` as profile.json on top of `previous`, which must be the file GitHub has now.
@@ -177,6 +220,8 @@ export function createProfileRoutes({ repositoryContext, fetchImpl }) {
     context.assertCurrent();
     if (!validSha(result.content?.sha)) throw new GitHubError(502, "GitHub saved the file but returned incomplete information. Reload before saving again.");
     written = { key: editRevision(context, result.content.sha), raw, revision: result.content.sha, updatedAt: commitDate(result.commit) };
+    if (superseded.size >= 100) superseded.clear(); // ponytail: forgetting only brings back the reload prompt
+    superseded.set(editRevision(context, previous.revision), written.key);
     return written;
   }
 
@@ -189,11 +234,31 @@ export function createProfileRoutes({ repositoryContext, fetchImpl }) {
     await write(context, previous, raw, "Issue Scout: finish setup");
   }
 
-  return { finishSetup, routes: {
+  // The engine's view of the profile, for checks before starting a run.
+  const readProfile = async (context) => (await read(context)).raw;
+
+  // For electron/email.js: the raw profile with an edit revision, and a revision-checked change to top-level fields
+  // that keeps everything else. `message` gets the previous profile.
+  async function readFields(context) {
+    const value = await read(context);
+    return { raw: value.raw, revision: editRevision(context, value.revision) };
+  }
+  async function updateFields(context, revision, change, message) {
+    revision = current(revision);
+    const previous = written?.key === revision ? written : await read(context);
+    if (typeof revision !== "string" || editRevision(context, previous.revision) !== revision)
+      throw new GitHubError(409, "Your profile changed on GitHub. Reload the latest version before saving.");
+    const raw = { ...structuredClone(previous.raw), ...change };
+    if (JSON.stringify(raw) === JSON.stringify(previous.raw)) return { raw, revision };
+    const saved = await write(context, previous, raw, message(previous.raw));
+    return { raw, revision: editRevision(context, saved.revision) };
+  }
+
+  return { finishSetup, readProfile, readFields, updateFields, routes: {
     "GET /api/profile": async () => {
       const context = await repositoryContext();
-      const value = await read(context);
-      return [200, asProfile(value.raw, editRevision(context, value.revision), value.updatedAt)];
+      const [value, supported] = await Promise.all([read(context), engineLanguages(context)]);
+      return [200, { ...asProfile(value.raw, editRevision(context, value.revision), value.updatedAt), supported_languages: supported }];
     },
     "PUT /api/profile": async (body) => save(await repositoryContext(), body, "profile"),
     "GET /api/scout/settings": async () => {

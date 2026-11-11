@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "outcome": "fix_verified",
+  "reason": "Documentation checks pass.",
+  "issue": {
+    "url": "https://github.com/acme/core/issues/4",
+    "repo": "acme/core",
+    "number": 4,
+    "title": "Pydantic validation returns wrong result for nested input",
+    "labels": [
+      "bug"
+    ],
+    "repo_stars": null,
+    "updated_at": "2026-10-06T12:00:00Z",
+    "body_excerpt": "Steps to reproduce: call validate({'value': None}) on Python 3.12. Expected a ValidationError; actual behavior returns None. A regression test can reproduce this with pytest.",
+    "work_type": "documentation",
+    "language": "none",
+    "validation_plan": null,
+    "why": "Focused regression fix",
+    "score": 17,
+    "score_components": {
+      "topic_fit": 5,
+      "language_fit": 4,
+      "documentation": 0,
+      "reproducer": 2,
+      "bug_label": 2,
+      "maintainer_signal": 4,
+      "familiarity": 0,
+      "scope": 0,
+      "freshness": 0,
+      "repo_activity": 0
+    },
+    "confidence": null,
+    "ai_policy": {
+      "status": "none",
+      "quote": ""
+    },
+    "feasibility": "Python package and pytest suite"
+  },
+  "fix": {
+    "provider": "claude-code",
+    "fix_attempts": 1,
+    "cost_estimate": 0,
+    "tests_passed": true,
+    "regression_reproduced": null,
+    "documentation_verified": true,
+    "runtime": "documentation",
+    "setup_commands": [],
+    "test_commands": [],
+    "validation_log": "Targeted tests passed",
+    "regression_log": "not applicable to documentation",
+    "root_cause": "Review detail",
+    "approach": "Review detail",
+    "risks": "Review detail",
+    "not_verified": "Review detail",
+    "maintainer_questions": [
+      "Expected behavior confirmed"
+    ],
+    "checklist": [
+      "Review patch"
+    ],
+    "claim_comment": "Review detail",
+    "commit_message": "Review detail",
+    "pr_title": "Review detail",
+    "pr_body": "Review detail"
+  },
+  "report_file": "report.txt",
+  "patch_file": "change.patch",
+  "patch_withheld_reason": null,
+  "notification": {
+    "status": "disabled",
+    "attempts": 0
+  }
+}

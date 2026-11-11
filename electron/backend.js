@@ -6,10 +6,16 @@ import {
 } from "./github.js";
 import { createModelRoutes } from "./models.js";
 import { createProfileRoutes } from "./profile.js";
+import { createRunRoutes } from "./runs.js";
+import { createScheduleRoutes } from "./schedule.js";
+import { createEmailRoutes } from "./email.js";
+import { createHistoryRoutes } from "./history.js";
 
 const NOT_YET = [501, { error: "This part of Issue Scout isn't in the desktop app yet." }];
 
-export function createBackend({ tokens, repositories, clientId, openExternal, fetchImpl = fetch, sleep = (ms) => new Promise((done) => setTimeout(done, ms)) }) {
+// `saveFile({ name, content })` asks the user where to save a run's file (main.js shows a save dialog) and
+// resolves to whether it was saved. `setWindowTheme("light" | "dark")` colors the window's title bar to match.
+export function createBackend({ tokens, repositories, clientId, openExternal, saveFile = async () => false, setWindowTheme = () => {}, emailRelayUrl = "", emailStore, fetchImpl = fetch, sleep = (ms) => new Promise((done) => setTimeout(done, ms)) }) {
   let device;
   let session = 0;
   let repositoryBusy = false;
@@ -66,7 +72,11 @@ export function createBackend({ tokens, repositories, clientId, openExternal, fe
   const profile = createProfileRoutes({ repositoryContext, fetchImpl });
   const routes = {
     ...profile.routes,
-    ...createModelRoutes({ repositoryContext, finishSetup: profile.finishSetup, fetchImpl }),
+    ...createModelRoutes({ repositoryContext, finishSetup: profile.finishSetup, readProfile: profile.readProfile, fetchImpl }),
+    ...createRunRoutes({ repositoryContext, readProfile: profile.readProfile, fetchImpl, sleep, saveFile }),
+    ...createHistoryRoutes({ repositoryContext, fetchImpl }),
+    ...createScheduleRoutes({ repositoryContext, readProfile: profile.readProfile, fetchImpl }),
+    ...createEmailRoutes({ repositoryContext, profile, relayUrl: emailRelayUrl, store: emailStore, fetchImpl }),
     "GET /api/me": async () => {
       const { token, user, assertCurrent } = await signedIn();
       const saved = repositories.get(user.id);
@@ -122,6 +132,15 @@ export function createBackend({ tokens, repositories, clientId, openExternal, fe
         repositoryBusy = false;
       }
     },
+    // Forgets which Scout repository this account uses on this computer, so repository setup opens again.
+    // Nothing on GitHub changes; the same repository can be connected again at any time.
+    "DELETE /api/repository": async () => {
+      const { user, assertCurrent } = await signedIn();
+      if (repositoryBusy) throw new GitHubError(409, "Repository setup is already in progress. Please wait.");
+      assertCurrent();
+      repositories.forget(user.id);
+      return [200, account(user)];
+    },
     "POST /auth/device": async () => {
       if (!clientId) return [503, { error: "GitHub sign-in isn't configured in this build. Please contact the app maintainer." }];
       const version = ++session;
@@ -143,6 +162,12 @@ export function createBackend({ tokens, repositories, clientId, openExternal, fe
       tokens.save(token);
       return routes["GET /api/me"]();
     },
+    // Needs no sign-in: the theme can change on any page.
+    "PUT /api/window/theme": async (body) => {
+      if (!["light", "dark"].includes(body?.theme)) return [422, { error: "Choose the light or dark theme." }];
+      setWindowTheme(body.theme);
+      return [204];
+    },
     "POST /auth/logout": async () => {
       session++;
       device = undefined;
@@ -151,10 +176,12 @@ export function createBackend({ tokens, repositories, clientId, openExternal, fe
     },
   };
   return async (path, method = "GET", body) => {
-    const route = routes[`${method} ${path}`];
+    // Run routes carry a GitHub run id; only digits are accepted, so it can't change the API path.
+    const id = path.match(/^\/api\/runs\/(\d{1,20})(?=\/|$)/)?.[1];
+    const route = routes[`${method} ${id ? path.replace(`/api/runs/${id}`, "/api/runs/:id") : path}`];
     if (!route) return NOT_YET;
     try {
-      return await route(body);
+      return await route(body, id);
     } catch (error) {
       if (error?.status === 401) known = undefined; // a revoked token is re-checked (and cleared) on the next request
       return [error instanceof GitHubError ? error.status : 502, {

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "outcome": "no_fix",
+  "reason": "RuntimeError: claude-code failed; check CLI authentication, model access, and structured-output support",
+  "issue": {
+    "url": "https://github.com/acme/core/issues/2",
+    "repo": "acme/core",
+    "number": 2,
+    "title": "Pydantic validation returns wrong result for nested input",
+    "labels": [
+      "bug"
+    ],
+    "repo_stars": null,
+    "updated_at": "2026-10-06T12:00:00Z",
+    "body_excerpt": "Steps to reproduce: call validate({'value': None}) on Python 3.12. Expected a ValidationError; actual behavior returns None. A regression test can reproduce this with pytest.",
+    "work_type": "code",
+    "language": "python",
+    "validation_plan": null,
+    "why": "Focused regression fix",
+    "score": 17,
+    "score_components": {
+      "topic_fit": 5,
+      "language_fit": 4,
+      "documentation": 0,
+      "reproducer": 2,
+      "bug_label": 2,
+      "maintainer_signal": 4,
+      "familiarity": 0,
+      "scope": 0,
+      "freshness": 0,
+      "repo_activity": 0
+    },
+    "confidence": null,
+    "ai_policy": {
+      "status": "none",
+      "quote": ""
+    },
+    "feasibility": "Python package and pytest suite"
+  },
+  "fix": null,
+  "report_file": "report.txt",
+  "patch_file": null,
+  "patch_withheld_reason": null,
+  "notification": {
+    "status": "disabled",
+    "attempts": 0
+  }
+}

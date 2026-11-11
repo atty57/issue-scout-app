@@ -69,6 +69,21 @@ it("shows the engine defaults and which keys are saved, never their values", asy
   expect(models.providers.map((provider) => provider.id)).toEqual(["groq", "openai", "anthropic", "openai-compatible", "claude-code", "codex"]);
 });
 
+it("reports setup complete only when setup_required is cleared and every saved stage is complete", async () => {
+  secrets.set("OPENAI_API_KEY", {}); secrets.set("CLAUDE_CODE_OAUTH_TOKEN", {});
+  variables.set("SCOUT_PICKER_PROVIDER", "openai"); variables.set("SCOUT_PICKER_AUTH", "api-key");
+  // Keys saved, but profile.json still has setup_required.
+  variables.set("SCOUT_PICKER_MODEL", "gpt-a");
+  expect((await backend("/api/models"))[1].ready).toBe(false);
+  delete raw.setup_required;
+  expect((await backend("/api/models"))[1].ready).toBe(true);
+  // Every key saved, but OpenAI needs a model and none is set.
+  variables.delete("SCOUT_PICKER_MODEL");
+  expect((await backend("/api/models"))[1].ready).toBe(false);
+  const [status, saved] = await backend("/api/models", "PUT", { picker: stage("openai", "api-key", { model: "gpt-a" }), solver: stage("claude-code", "subscription") });
+  expect([status, saved.ready]).toEqual([200, true]);
+});
+
 it("saves models as variables and keys as sealed secrets, then finishes setup", async () => {
   const [status, models] = await backend("/api/models", "PUT", {
     picker: stage("groq", "api-key", { key: " gsk_test_key " }),
@@ -109,6 +124,7 @@ it("asks for the key a stage needs and writes nothing until it is given", async 
 
 it.each([
   [{ picker: stage("ruby", "api-key") }, "picker.provider"],
+  [{ solver: stage("groq", "api-key") }, "solver.provider"],
   [{ picker: stage("groq", "subscription") }, "picker.auth"],
   [{ picker: stage("codex", "subscription") }, "picker.auth"],
   [{ picker: stage("openai", "api-key", { key: "sk-test" }) }, "picker.model"],
@@ -138,6 +154,72 @@ it("refuses two different keys for a secret both stages share", async () => {
   expect(status).toBe(422);
   expect(error.fields).toHaveProperty(["solver.key"]);
   expect(writes()).toHaveLength(0);
+});
+
+it.each(["picker", "solver"])("accepts a new shared key entered only for the %s", async (role) => {
+  const stages = {
+    picker: stage("openai", "api-key", { model: "gpt-a" }),
+    solver: stage("openai", "api-key", { model: "gpt-b" }),
+  };
+  stages[role].key = "sk-shared";
+  const [status, models] = await backend("/api/models", "PUT", stages);
+  expect(status).toBe(200);
+  expect(decrypt("OPENAI_API_KEY")).toBe("sk-shared");
+  expect(writes().filter((request) => request.url.endsWith("/actions/secrets/OPENAI_API_KEY"))).toHaveLength(1);
+  expect(models.secrets).toEqual(["OPENAI_API_KEY"]);
+  expect(JSON.stringify(models)).not.toContain("sk-shared");
+  expect(raw).not.toHaveProperty("setup_required");
+});
+
+it.each([
+  ["picker", "codex"], ["solver", "codex"],
+  ["picker", "openai-compatible"], ["solver", "openai-compatible"],
+])("keeps the engine's saved OpenAI key fallback for %s using %s", async (role, provider) => {
+  secrets.set("OPENAI_API_KEY", {}); secrets.set("GROQ_API_KEY", {}); secrets.set("CLAUDE_CODE_OAUTH_TOKEN", {});
+  variables.set(`SCOUT_${role.toUpperCase()}_PROVIDER`, provider);
+  variables.set(`SCOUT_${role.toUpperCase()}_AUTH`, "api-key");
+  variables.set(`SCOUT_${role.toUpperCase()}_MODEL`, "custom-model");
+  if (provider === "openai-compatible") variables.set(`SCOUT_${role.toUpperCase()}_BASE_URL`, "https://example.com/v1");
+  const [readStatus, models] = await backend("/api/models");
+  expect(readStatus).toBe(200);
+  expect(models.secrets).toContain("OPENAI_API_KEY");
+  const stages = { picker: stage("groq", "api-key"), solver: stage("claude-code", "subscription") };
+  stages[role] = { ...models[role], key: "" };
+  expect((await backend("/api/models", "PUT", stages))[0]).toBe(200);
+  expect(writes().some((request) => request.url.includes("/actions/secrets/"))).toBe(false);
+  expect(raw).not.toHaveProperty("setup_required");
+});
+
+it.each([
+  ["codex", "CODEX_API_KEY"], ["openai-compatible", "SCOUT_API_KEY"],
+])("updates %s's saved OpenAI fallback instead of creating a competing key", async (provider, primary) => {
+  secrets.set("OPENAI_API_KEY", {}); secrets.set("GROQ_API_KEY", {}); secrets.set("CLAUDE_CODE_OAUTH_TOKEN", {});
+  expect((await backend("/api/models", "PUT", {
+    picker: stage(provider, "api-key", { model: "custom-model", base_url: "https://example.com/v1", key: "replacement-key" }),
+    solver: stage("claude-code", "subscription"),
+  }))[0]).toBe(200);
+  expect(decrypt("OPENAI_API_KEY")).toBe("replacement-key");
+  expect(secrets.has(primary)).toBe(false);
+});
+
+it.each([
+  ["codex", "CODEX_API_KEY"], ["openai-compatible", "SCOUT_API_KEY"],
+])("prefers %s's own saved key over the OpenAI fallback", async (provider, name) => {
+  secrets.set(name, {}); secrets.set("OPENAI_API_KEY", {}); secrets.set("GROQ_API_KEY", {}); secrets.set("CLAUDE_CODE_OAUTH_TOKEN", {});
+  expect((await backend("/api/models", "PUT", {
+    picker: stage(provider, "api-key", { model: "custom-model", base_url: "https://example.com/v1", key: "replacement-key" }),
+    solver: stage("claude-code", "subscription"),
+  }))[0]).toBe(200);
+  expect(decrypt(name)).toBe("replacement-key");
+  expect(secrets.get("OPENAI_API_KEY")).toEqual({});
+});
+
+it("reads automatic Claude Code API-key authentication from a saved stage override", async () => {
+  variables.set("SCOUT_SOLVER_AUTH", "auto");
+  secrets.set("SCOUT_SOLVER_API_KEY", {});
+  const [status, models] = await backend("/api/models");
+  expect(status).toBe(200);
+  expect(models.solver).toMatchObject({ provider: "claude-code", auth: "api-key" });
 });
 
 it("requires sign-in", async () => {

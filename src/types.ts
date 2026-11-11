@@ -1,4 +1,4 @@
-export type Language = "python" | "javascript" | "typescript" | "csharp" | "c";
+export type Language = "python" | "javascript" | "typescript" | "csharp" | "c" | "go" | "rust" | "java" | "cpp";
 export type ScoutRepository = { id: number; full_name: string; html_url: string };
 export type RepositorySetup =
   | { mode: "create"; name: string }
@@ -24,6 +24,7 @@ export type Job = {
 export type Sourced<T> = { value: T; sources: string[]; locked: boolean };
 export type Profile = {
   revision?: string;
+  supported_languages?: Language[]; // desktop: what the Scout repository's own engine runs (its scout.json)
   summary: string;
   skills: Sourced<string>[];
   languages: Sourced<Language>[];
@@ -153,9 +154,11 @@ export type ModelProvider = {
   id: string;
   label: string;
   credentials: Partial<Record<ModelAuth, string>>;
+  api_key_fallback?: string;
   model: "required" | "optional";
   model_hint: string;
   base_url?: boolean;
+  stages?: ("picker" | "solver")[]; // absent: usable for both stages
 };
 export type ModelStage = { provider: string; auth: ModelAuth; model: string; base_url: string };
 export type ModelStageUpdate = ModelStage & { key: string };
@@ -164,6 +167,35 @@ export type ModelSettings = {
   secrets: string[];
   picker: ModelStage;
   solver: ModelStage;
+  ready: boolean; // setup finished and both saved stages complete (electron/models.js), so runs can start
+};
+// Desktop daily run (electron/schedule.js), saved as `on.schedule` in the Scout repository's daily.yml.
+export type Schedule = {
+  revision: string;
+  enabled: boolean;
+  custom: boolean; // daily.yml has a schedule the app can't show; saving replaces it
+  time: string; // "HH:MM", local to `timezone`
+  timezone: string; // IANA name
+  setup_required: boolean;
+};
+export type ScheduleUpdate = Pick<Schedule, "revision" | "enabled" | "time" | "timezone">;
+// Desktop email reports (electron/email.js). `available: false` when the build has no email relay configured.
+export type EmailSettings =
+  | { available: false }
+  | {
+      available: true;
+      ready: boolean; // the Scout repository has the email workflow
+      revision: string;
+      email: string;
+      enabled: boolean;
+      confirmed: boolean;
+      code_sent: boolean;
+    };
+export type EmailUpdate = { revision: string; email: string; enabled: boolean };
+export type Delivery = {
+  status: "sent" | "disabled" | "failed" | "resending";
+  reason?: string;
+  message: string;
 };
 export type Connection = {
   id: "github" | "solver" | "ranking" | "email" | "tracing";
@@ -181,6 +213,30 @@ export type RunStage =
   | "solve"
   | "validate"
   | "notify";
+// desktop: the engine's outcome from the run's result.json. Only "fix_verified" means the fix's checks passed.
+export type RunOutcome = "fix_verified" | "fix_not_verified" | "no_fix" | "no_pick";
+export type RunIssue = {
+  url: string;
+  repo: string;
+  number: number;
+  title: string;
+  labels?: string[];
+  repo_stars?: number | null;
+  updated_at?: string | null;
+  body_excerpt?: string;
+  why?: string; // the picker's reason
+  work_type?: string | null;
+  language?: string | null;
+  feasibility?: string | null;
+  ai_policy?: { status: string; quote: string } | null;
+};
+// desktop: what the run's saved artifact holds, or why it can't be shown
+export type RunArtifact = {
+  status: "available" | "older" | "missing" | "expired" | "unreadable" | "unavailable";
+  message: string;
+  report_text?: string; // a saved report without a review brief (a failed fix step, or an older engine)
+  patch?: string; // an older engine's saved patch
+};
 export type Run = {
   id: string;
   status: "running" | "completed" | "abstained" | "failed" | "cancelled";
@@ -188,11 +244,37 @@ export type Run = {
   started_at: string;
   finished_at?: string;
   suggestion_id?: string;
-  issue?: Suggestion["issue"];
+  issue?: RunIssue;
   events: { at: string; stage: RunStage; message: string }[];
   error?: string;
   report?: RunReport;
+  html_url?: string; // desktop: the workflow run on GitHub
+  delivery?: Delivery; // desktop: the run's email outcome
+  outcome?: RunOutcome;
+  outcome_reason?: string;
+  artifact?: RunArtifact;
 };
+// desktop: one issue the engine attempted, from state/seen.json. Absent fields weren't recorded.
+export type HistoryItem = {
+  url: string;
+  repo: string;
+  number: number;
+  status: "notified" | "completed" | "failed"; // notified: verified and delivered; completed: verified, email not sent
+  legacy?: boolean; // from the older URL-only history, which listed delivered issues only
+  attempted_at?: string;
+  attempts?: number;
+  retry_after?: string;
+  tests_passed?: boolean;
+  reproduces?: boolean | null;
+  documentation_verified?: boolean;
+  work_type?: string;
+  language?: string;
+  score?: number;
+  why?: string;
+  reason?: string;
+  notification?: { status: string; reason?: string; error?: string };
+};
+export type HistoryResponse = { items: HistoryItem[]; skipped: number };
 export type RunReport = {
   root_cause: string;
   approach: string;
@@ -204,20 +286,25 @@ export type RunReport = {
   commit_message: string;
   pr_title: string;
   pr_body: string;
-  runtime: string;
+  work_type?: "code" | "documentation"; // a code fix's regression check runs only once its tests pass
+  runtime: string | null;
+  setup_commands?: string[][];
   test_commands: string[][];
   tests_passed: boolean;
   regression_reproduced: boolean | null;
+  documentation_verified?: boolean;
   validation_log: string;
   regression_log: string;
-  cost_estimate: number;
-  attempts: number;
+  cost_estimate: number | null; // null: the provider reported none, which isn't the same as free
+  attempts: number | null; // drafting attempts
+  provider?: string | null;
   patch: string | null;
   patch_withheld_reason?: string;
   report_text: string;
   notification: {
-    status: "sent" | "failed" | "disabled";
+    status: "sent" | "failed" | "disabled" | "pending";
     attempts: number;
+    reason?: string;
     error?: string;
   };
 };

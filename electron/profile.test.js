@@ -9,11 +9,13 @@ const initial = {
   scouting: { candidate_limit: 30, min_stars: 200, future_setting: "keep" },
 };
 const oldSha = "a".repeat(40), newSha = "b".repeat(40), commitSha = "c".repeat(40);
-let backend, raw, sha, requests, token, pending, fetchImpl;
+let backend, raw, sha, requests, token, pending, fetchImpl, manifest;
+// The template's scout.json, as a newer Scout repository has it.
+const NEW_ENGINE = JSON.stringify({ manifest_version: 1, languages: ["python", "javascript", "typescript", "csharp", "c", "go", "rust", "java", "cpp"], work_types: ["code", "documentation"] });
 
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn(() => { throw new Error("Live requests are forbidden in offline tests."); }));
-  raw = structuredClone(initial); sha = oldSha; requests = []; token = "private-token"; pending = undefined;
+  raw = structuredClone(initial); sha = oldSha; requests = []; token = "private-token"; pending = undefined; manifest = undefined;
   fetchImpl = vi.fn(async (url, options = {}) => {
     requests.push({ url, ...options });
     let data;
@@ -27,7 +29,10 @@ beforeEach(() => {
       raw = JSON.parse(Buffer.from(body.content, "base64").toString("utf8")); sha = newSha;
       data = { content: { sha }, commit: { sha: "d".repeat(40), committer: { date: "2026-11-08T12:01:00Z" } } };
     } else if (url.includes("/contents/profile.json")) data = { type: "file", encoding: "base64", sha, content: Buffer.from(JSON.stringify(raw)).toString("base64") };
-    else if (url.includes("/contents/")) data = { type: "file" };
+    else if (url.includes("/contents/scout.json")) {
+      if (manifest === undefined) return { ok: false, status: 404, headers: new Headers(), json: async () => ({ message: "Not Found" }) };
+      data = { type: "file", encoding: "base64", content: Buffer.from(manifest).toString("base64") };
+    } else if (url.includes("/contents/")) data = { type: "file" };
     else throw new Error(`Unexpected offline route: ${url}`);
     return { ok: true, status: 200, headers: new Headers(), json: async () => data };
   });
@@ -80,6 +85,32 @@ it("saves plain engine values while preserving unrelated fields and the setup gu
   const write = requests.find((request) => request.method === "PUT");
   expect(JSON.parse(write.body)).toMatchObject({ sha: oldSha, branch: "custom/branch", message: expect.stringContaining("profile") });
   expect(JSON.stringify(saved)).not.toContain("private-token");
+});
+
+it("offers the languages the repository's own engine lists in scout.json, and saves them", async () => {
+  manifest = NEW_ENGINE;
+  const value = await profile();
+  expect(value.supported_languages).toEqual(["python", "javascript", "typescript", "csharp", "c", "go", "rust", "java", "cpp"]);
+  value.languages = ["go", "rust", "java", "cpp"].map((language) => ({ value: language, sources: ["user"], locked: true }));
+  const [status, saved] = await backend("/api/profile", "PUT", value);
+  expect(status).toBe(200);
+  expect(raw.languages).toEqual(["go", "rust", "java", "cpp"]);
+  expect(saved.supported_languages).toContain("cpp");
+  raw.languages = ["C++", "golang", "Rust"]; // aliases written by hand read as the engine's names
+  sha = "e".repeat(40);
+  expect((await profile()).languages.map((row) => row.value)).toEqual(["cpp", "go", "rust"]);
+});
+
+it("offers only the first five languages to a repository whose engine predates scout.json, and won't save others", async () => {
+  const value = await profile();
+  expect(value.supported_languages).toEqual(["python", "javascript", "typescript", "csharp", "c"]);
+  value.languages = [{ value: "python", sources: ["user"], locked: true }, { value: "go", sources: ["user"], locked: true }];
+  const [status, error] = await backend("/api/profile", "PUT", value);
+  expect(status).toBe(422);
+  expect(error.fields).toEqual({ "languages.1.value": expect.stringContaining("doesn't run this language yet") });
+  expect(requests.some((request) => request.method === "PUT")).toBe(false); // the engine would reject it at startup
+  manifest = "{not json"; // an unreadable manifest offers only what every engine runs
+  expect((await profile()).supported_languages).toEqual(["python", "javascript", "typescript", "csharp", "c"]);
 });
 
 it("saves engine scouting settings without losing profile fields or other scouting settings", async () => {

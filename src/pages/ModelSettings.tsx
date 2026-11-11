@@ -12,29 +12,34 @@ const STAGES: [Role, string, string][] = [
 ];
 const AUTH_LABELS: Record<ModelAuth, string> = { "api-key": "API key", subscription: "Subscription (OAuth token)" };
 
-// Same rule as credentialName in electron/models.js: a stage's own SCOUT_<ROLE>_API_KEY wins for API keys.
+// Keep saved-key hints aligned with credentialName in electron/models.js.
 function credentialName(role: Role, stage: ModelStageUpdate, provider: ModelProvider, secrets: string[]) {
   const own = `SCOUT_${role.toUpperCase()}_API_KEY`;
-  return stage.auth === "api-key" && secrets.includes(own) ? own : provider.credentials[stage.auth] ?? "";
+  if (stage.auth === "api-key" && secrets.includes(own)) return own;
+  const primary = provider.credentials[stage.auth] ?? "";
+  return stage.auth === "api-key" && provider.api_key_fallback && !secrets.includes(primary) && secrets.includes(provider.api_key_fallback)
+    ? provider.api_key_fallback : primary;
 }
+// Same rule as validateStage in electron/models.js (Groq is picking only).
+const usable = (provider: ModelProvider, role: Role) => !provider.stages || provider.stages.includes(role);
 const editable = (models: Models) => ({
   picker: { ...models.picker, key: "" },
   solver: { ...models.solver, key: "" },
 });
 
 // Desktop only: models live in the Scout repository as Actions variables, keys as encrypted secrets.
-export default function ModelSettings() {
+export default function ModelSettings({ onSaved }: { onSaved?: (models: Models) => void }) {
   const resource = useResource(() => api.models());
   return resource.loading ? (
     <Loading label="Loading models…" />
   ) : resource.error ? (
     <ErrorState message={resource.error} retry={resource.reload} />
   ) : resource.data ? (
-    <Editor initial={resource.data} />
+    <Editor initial={resource.data} onSaved={onSaved} />
   ) : null;
 }
 
-function Editor({ initial }: { initial: Models }) {
+function Editor({ initial, onSaved }: { initial: Models; onSaved?: (models: Models) => void }) {
   const [saved, setSaved] = useState(initial);
   const [draft, setDraft] = useState(() => editable(initial));
   const [busy, setBusy] = useState(false);
@@ -55,6 +60,7 @@ function Editor({ initial }: { initial: Models }) {
       const result = await api.saveModels(draft);
       setSaved(result);
       setDraft(editable(result));
+      onSaved?.(result);
       setNotice("Models saved. Your keys are stored as encrypted secrets in your Scout repository.");
     } catch (error) {
       setError(errorMessage(error));
@@ -69,6 +75,20 @@ function Editor({ initial }: { initial: Models }) {
       <p className="section-description">
         Choose a model for each stage. Runs use your own API keys or subscription. Keys are saved as
         encrypted secrets in your Scout repository and can’t be read back, even by this app.
+      </p>
+      {/* From the backend: setup_required is cleared and both saved stages are complete. */}
+      <p className="setup-status">
+        {saved.ready ? (
+          <>
+            <span className="badge success">Setup complete</span>
+            Both stages have a model and a saved key, so your scout can run.
+          </>
+        ) : (
+          <>
+            <span className="badge">Setup needed</span>
+            Save a model and key for both stages. Runs can’t start until then.
+          </>
+        )}
       </p>
       {notice && (
         <div className="notice" role="status">
@@ -86,7 +106,7 @@ function Editor({ initial }: { initial: Models }) {
             const hasKey = saved.secrets.includes(credential);
             const keyLabel = stage.auth === "subscription" ? `${provider.label} OAuth token` : `${provider.label} API key`;
             return (
-              <div key={role}>
+              <div key={role} className="model-stage">
                 <h3>{title}</h3>
                 <p className="field-hint">{hint}</p>
                 <div className="preferences-grid">
@@ -96,21 +116,28 @@ function Editor({ initial }: { initial: Models }) {
                       value={provider.id}
                       onChange={(event) => {
                         const next = saved.providers.find((item) => item.id === event.target.value) ?? provider;
-                        update(role, { provider: next.id, auth: Object.keys(next.credentials)[0] as ModelAuth, model: "", base_url: "" });
+                        update(role, { provider: next.id, auth: Object.keys(next.credentials)[0] as ModelAuth, model: "", base_url: "", key: "" });
                       }}
                     >
-                      {saved.providers.map((item) => (
+                      {/* Keep a saved but unusable provider listed, so the select shows what's actually set. */}
+                      {saved.providers.filter((item) => usable(item, role) || item.id === provider.id).map((item) => (
                         <option key={item.id} value={item.id}>
                           {item.label}
                         </option>
                       ))}
                     </select>
-                    {fieldErrors(fields, `${role}.provider`)}
+                    {fields[`${role}.provider`]
+                      ? fieldErrors(fields, `${role}.provider`)
+                      : !usable(provider, role) && (
+                          <span className="field-error" role="alert">
+                            {provider.label} can pick issues but can’t draft fixes. Choose another provider for fix drafting.
+                          </span>
+                        )}
                   </label>
                   {auths.length > 1 && (
                     <label className="field">
                       <span>{title} sign-in</span>
-                      <select value={stage.auth} onChange={(event) => update(role, { auth: event.target.value as ModelAuth })}>
+                      <select value={stage.auth} onChange={(event) => update(role, { auth: event.target.value as ModelAuth, key: "" })}>
                         {auths.map((auth) => (
                           <option key={auth} value={auth}>
                             {AUTH_LABELS[auth]}

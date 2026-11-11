@@ -3,7 +3,10 @@ import { mockRequest, resetMock } from "./mock/server";
 import type {
   Connection,
   DemoScenario,
+  EmailSettings,
+  EmailUpdate,
   Feedback,
+  HistoryResponse,
   Job,
   Me,
   ModelSettings,
@@ -13,13 +16,14 @@ import type {
   Project,
   RepositorySetup,
   Run,
+  Schedule,
+  ScheduleUpdate,
   ScoutSettings,
   Suggestion,
   SuggestionResponse,
 } from "./types";
 
 export const isMock = import.meta.env.VITE_API_MODE === "mock";
-const base = "";
 
 // The desktop app's main process (electron/backend.js) answers these routes.
 // Mock transport is explicitly enabled only for tests.
@@ -48,6 +52,11 @@ export const api = {
   me: () => request<Me>("/api/me"),
   setupRepository: (setup: RepositorySetup) =>
     request<Me>("/api/repository", { method: "POST", body: JSON.stringify(setup) }),
+  // Desktop: forget this computer's link to the Scout repository (nothing on GitHub changes), then set up again.
+  disconnectRepository: () => request<Me>("/api/repository", { method: "DELETE" }),
+  // Desktop: colors the window's title bar and its window controls to match the theme.
+  windowTheme: (theme: "light" | "dark") =>
+    request<void>("/api/window/theme", { method: "PUT", body: JSON.stringify({ theme }) }),
   startLogin: () =>
     request<{ user_code: string; verification_uri: string }>("/auth/device", {
       method: "POST",
@@ -106,13 +115,27 @@ export const api = {
     request<Connection>(`/api/connections/${encodeURIComponent(id)}`, {
       method: "POST",
     }),
+  email: () => request<EmailSettings>("/api/email"),
+  saveEmail: (email: EmailUpdate) =>
+    request<EmailSettings>("/api/email", { method: "PUT", body: JSON.stringify(email) }),
+  requestEmailCode: () => request<EmailSettings>("/api/email/verify", { method: "POST" }),
+  confirmEmail: (code: string) =>
+    request<EmailSettings>("/api/email/confirm", { method: "POST", body: JSON.stringify({ code }) }),
+  schedule: () => request<Schedule>("/api/schedule"),
+  saveSchedule: (schedule: ScheduleUpdate) =>
+    request<Schedule>("/api/schedule", { method: "PUT", body: JSON.stringify(schedule) }),
   runs: () => request<Run[]>("/api/runs"),
   run: (id: string) => request<Run>(`/api/runs/${encodeURIComponent(id)}`),
-  // Authenticated download streamed from the artifact store (object storage in prod).
-  artifactUrl: (id: string, kind: "report" | "patch" | "log") =>
-    `${base}/api/runs/${encodeURIComponent(id)}/artifacts/${kind}`,
+  // Desktop: main downloads the run's artifact and asks where to save the file; the page never gets a link.
+  saveRunFile: (id: string, file: "report" | "patch") =>
+    request<{ saved: boolean }>(`/api/runs/${encodeURIComponent(id)}/save`, {
+      method: "POST",
+      body: JSON.stringify({ file }),
+    }),
+  history: () => request<HistoryResponse>("/api/history"),
   startRun: (suggestionId?: string) =>
-    request<Run>("/api/runs", {
+    // `pending` (desktop only): the start was sent but the run isn't listed yet. GitHub may not have confirmed it.
+    request<Run | { pending: true }>("/api/runs", {
       method: "POST",
       body: JSON.stringify(suggestionId ? { suggestion_id: suggestionId } : {}),
     }),

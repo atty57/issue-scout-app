@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- The sidebar's brand mark (src/components/ui.tsx Logo): lucide's compass in white on the theme green. -->
+  <rect x="8" y="8" width="240" height="240" rx="72" fill="#2c634a"/>
+  <g transform="translate(48 48) scale(6.6667)" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/>
+    <circle cx="12" cy="12" r="10"/>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+Pydantic validation returns wrong result for nested input
+https://github.com/acme/core/issues/2
+
+Why this one: Focused regression fix
+Work type: code | language: python
+Scout score: 17 | suitability confidence: unknown
+Validation feasibility: Python package and pytest suite
+AI policy: none
+
+No fix this time: RuntimeError: claude-code failed; check CLI authentication, model access, and structured-output support

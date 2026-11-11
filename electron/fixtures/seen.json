@@ -1,0 +1,55 @@
+{
+  "https://github.com/acme/core/issues/3": {
+    "status": "notified",
+    "attempted_at": "2026-11-09T23:31:30.992282+00:00",
+    "attempts": 1,
+    "tests_passed": true,
+    "reproduces": true,
+    "work_type": "code",
+    "language": "python",
+    "documentation_verified": false,
+    "score": 17,
+    "why": "Focused regression fix",
+    "reason": "verified patch",
+    "notification": {
+      "status": "disabled",
+      "attempts": 0
+    }
+  },
+  "https://github.com/acme/core/issues/1": {
+    "status": "failed",
+    "attempted_at": "2026-11-09T23:31:31.051208+00:00",
+    "attempts": 1,
+    "tests_passed": true,
+    "reproduces": false,
+    "work_type": "code",
+    "language": "python",
+    "documentation_verified": false,
+    "score": 17,
+    "why": "Focused regression fix",
+    "reason": "fix not verified",
+    "notification": {
+      "status": "disabled",
+      "attempts": 0
+    },
+    "retry_after": "2026-11-16T23:31:31.051208+00:00"
+  },
+  "https://github.com/acme/core/issues/2": {
+    "status": "failed",
+    "attempted_at": "2026-11-09T23:31:31.090259+00:00",
+    "attempts": 1,
+    "tests_passed": false,
+    "reproduces": false,
+    "work_type": "code",
+    "language": "python",
+    "documentation_verified": false,
+    "score": 17,
+    "why": "Focused regression fix",
+    "reason": "RuntimeError: claude-code failed; check CLI authentication, model access, and structured-output support",
+    "notification": {
+      "status": "disabled",
+      "attempts": 0
+    },
+    "retry_after": "2026-11-16T23:31:31.090259+00:00"
+  }
+}
