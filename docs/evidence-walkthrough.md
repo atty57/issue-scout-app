@@ -4,8 +4,18 @@ Direction revised 2026-11-14. The main experience is an interactive diagram of *
 fix intervenes and **why** that change was chosen, drawn for the particular issue and patch. The five-item evidence
 summary (Part 2) is supporting data for it, not the screen.
 
-Status (2026-11-16, branch `feat/evidence-walkthrough`): experimental source preview for feedback. Stages 1 and 2
-are built. The only screen is the sample page; no real run shows a diagram, and the engine is unchanged.
+Status (2026-11-17, branch `feat/evidence-walkthrough`): source builds connect real run pages to optional
+engine-checked explanations. The engine implementation is deployed only to a separate private test copy; the
+public template is unchanged. Fresh-run verification on 2026-11-16 recorded `fix_verified` for
+[python-docx #1313](https://github.com/python-openxml/python-docx/issues/1313) and a source-checked
+three-step, two-connection explanation.
+The targeted tests pass and the regression fails on the original code. The actual artifact passes the app reader,
+diagram validator and offline Electron checks for Before/After/Changes at 1280px dark and 516px light, including
+keyboard opening, source display, recorded evidence and focus return. Nested report clipping found by this check
+is fixed using container-based layout and adaptive canvas gutters without shrinking metadata below 12px.
+448 app tests, production build and 675 engine tests pass. Earlier attempts abstained or omitted invalid/empty
+diagrams; source checks were not relaxed. Temporary discovery filters are restored. Native authenticated UI,
+screen readers, broader scaling and a new packaged installer remain untested for this integration.
 
 | Part | State |
 |---|---|
@@ -14,8 +24,8 @@ are built. The only screen is the sample page; no real run shows a diagram, and 
 | Diagram model (`src/diagram.ts`, 35 tests): `buildDiagram`, `view`, `reasoningFor` | Built (stage 1) |
 | Hand-written samples (`src/samples/explanations.ts`): a branching behaviour fix, a documentation fix and a large flow at the 12-step limit, all `sample: true` | Built |
 | Visual prototype on those samples (`src/components/BugDiagram.tsx`, `src/pages/ExplainerSample.tsx`, route `/samples/explainer`, 15 tests; offline Electron check of 72 layout states) | Built (stage 2) and polished after review 2026-11-15; waiting for the user's judgement of whether it helps |
-| Engine output for real runs (`explanation`, base commit, regression test) | Proposed below; needs the user's go-ahead |
-| Automatic diagrams for real runs | Blocked on the engine output |
+| Engine output for real runs (`explanation`, base commit, regression test) | Implemented on an isolated engine feature branch and a private test copy; 675 offline tests passed |
+| Automatic diagrams for real runs | Live external run #1313 produced a valid diagram; its actual artifact passes the app reader and offline renderer. Source-only integration; no new installer release |
 | Markdown and Obsidian Canvas export | Optional, last; the diagram data is plain so it maps directly |
 
 ## Trying the source preview
@@ -26,9 +36,9 @@ and inspect its code, reasoning and recorded-check examples. Keyboard activation
 returns focus to the control that opened the inspector. Plain `+`, `-` and `0` control the focused diagram.
 
 This preview is for source builds on the feature branch. The published v0.1.0 installer does not contain it.
-Gate the sample route and footer link before an installer release. Automatic explanations for real runs and
-Markdown/Obsidian exports are not implemented. Packaged-app, screen-reader and broader Windows scaling checks
-remain outstanding.
+Gate the sample route and footer link before an installer release. Real-run explanations are implemented on this branch
+and verified with a fresh run in the private engine test copy. Markdown/Obsidian exports
+are not implemented. Packaged-app, screen-reader and broader Windows scaling checks remain outstanding.
 
 # Part 1: the diagram
 
@@ -68,7 +78,7 @@ Checked against `save_result` and `BRIEF_SCHEMA` in the template (`84956cb`) and
 From today's data the app can build, honestly: the reasoning panel with two of the five questions answered and three
 marked "not recorded", the Changes list (files and hunks, from `splitPatch`), and the evidence rows.
 
-## Engine output needed (proposal; the engine is not changed in this step)
+## Experimental engine output contract
 
 Three additions to `result.json`. The first two are facts the engine already has and cost nothing.
 
@@ -76,8 +86,11 @@ Three additions to `result.json`. The first two are facts the engine already has
    reference to a real revision and lets the app link to that file on GitHub.
 2. `fix.test_files` and `fix.regression_marker`: already in the solver's brief, just not saved. They identify what
    the regression check ran.
-3. `explanation`: written by the solver in the same structured brief that already holds `root_cause`, then checked by
-   the engine against the checkout before saving.
+3. `explanation`: written alongside `root_cause`, then checked against the final original/patched Git index before
+   saving. The solver returns an optional `explanation_json` string, so malformed diagram JSON is discarded without
+   invalidating its core structured brief. The engine parses and validates that string independently, and saves an
+   object with `format_version: 1`, `code_checked: true`, `sample: false` and its actual `base_commit`. These stamps
+   come from the engine, not the model. The outer result remains `schema_version: 1`.
 
 ```text
 explanation
@@ -324,10 +337,10 @@ Each stage is its own reviewable change; the suite and build pass before each.
 | 0 | Evidence model, patch splitter | Yes | Done |
 | 1 | Diagram model: types, `buildDiagram`, the three views, the reasoning panel's data, hunk line numbers in `splitPatch`; hand-written samples (the branching example above and a documentation one; refused cases are those samples with one thing changed) | No | Done 2026-11-15 |
 | 2 | Visual prototype: canvas, inspector, reasoning panel, text list, all on the sample fixtures and reachable only from a labelled sample page (footer link "Preview: sample bug explanation"; remove or gate the link before any release) | No | Done 2026-11-15 |
-| 3 | Compatibility view for runs without an explanation (every existing run, and repositories on an older engine): "Explain" tab with the reasoning panel, Changes list, evidence, and the limitation notice. No diagram. Lower priority than getting stage 2 right | Yes | Review of stage 2 |
-| 4 | Engine contract: `base_commit`, `test_files`, `regression_marker`, `explanation`, engine-side checks, redaction; cost measured | Template repo | User's go-ahead; paid test runs |
-| 5 | App reads the new fields; diagrams appear for runs whose explanation passes `validate` | Yes | Stage 4 on the template's `main` |
-| 6 | Checks: both themes at 1280×860, 900×700, 900×500 and narrow; keyboard-only pass; large patch; packaged app; one real run, read-only; a first-time reader says what was observed and what was inferred | Yes | |
+| 3 | Compatibility view: Explain tab, reasoning, saved changes and an explicit no-diagram notice for old/unsupported reports | Offline checked | Implemented on this branch |
+| 4 | Optional engine contract, source checks and redaction | Private test copy only | 675 offline tests passed; fresh external run generated a valid explanation |
+| 5 | App reads the optional fields and uses `buildDiagram`; invalid/withheld/sample data cannot replace the report | Live artifact checked | Implemented on this branch; public template rollout deferred |
+| 6 | Checks: both themes at 1280×860, 900×700, 900×500 and narrow; keyboard-only pass; large patch; packaged app; one real run, read-only; a first-time reader says what was observed and what was inferred | Partial | Sample checks and actual-artifact replay pass; native authenticated UI, screen-reader, broader scaling and packaged integration checks remain |
 | 7 | Optional exports: Markdown (the text list plus reasoning), Obsidian Canvas (nodes and connections map one to one) | | Only if wanted |
 
 The prototype comes first so the user can judge whether a diagram actually makes a fix easier to understand before

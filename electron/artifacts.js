@@ -197,7 +197,24 @@ export function parseResult(json) {
     outcome: data.outcome, reason: data.reason, issue, fix,
     patch_file: data.patch_file, patch_withheld_reason: data.patch_withheld_reason ?? null,
     notification: picked ? notificationOf(data.notification) : null,
+    diagramMetadata: optionalDiagram(data),
   };
+}
+
+function optionalDiagram(data) {
+  if (data.explanation == null) return {};
+  if (data.patch_withheld_reason || !data.patch_file) return {
+    explanation_unavailable_reason: "No safe patch was saved, so this run’s diagram is unavailable.",
+  };
+  const value = data.explanation;
+  const commit = typeof data.base_commit === "string" && /^[0-9a-f]{40}$/.test(data.base_commit);
+  let bounded = false;
+  try { bounded = JSON.stringify(value).length <= 64000; } catch { /* Optional data must not hide the report. */ }
+  return commit && object(value) && value.format_version === 1 && value.code_checked === true
+    && value.sample === false && value.base_commit === data.base_commit && bounded
+    && value.kind === (data.issue?.work_type === "documentation" ? "documentation" : "behaviour")
+    ? { explanation: value }
+    : { explanation_unavailable_reason: "This run's diagram could not be read. Its report and validation evidence are still available." };
 }
 
 // What the app shows for an artifact's files: the run's outcome, issue and report (RunReport in src/types.ts).
@@ -215,6 +232,8 @@ export function artifactView(files) {
     return view;
   }
   const { fix } = result;
+  // Optional explanation failures never make the underlying report unreadable. Full graph/diff checks run in
+  // the renderer's pure diagram model; only explicitly engine-checked, versioned, non-sample data gets that far.
   view.report = {
     ...Object.fromEntries(BRIEF.map((key) => [key, fix[key] ?? ""])),
     maintainer_questions: fix.maintainer_questions ?? [], checklist: fix.checklist ?? [],
@@ -225,7 +244,7 @@ export function artifactView(files) {
     cost_estimate: fix.cost_estimate, attempts: fix.fix_attempts, provider: fix.provider,
     patch: result.patch_file ? patch : null,
     ...(result.patch_withheld_reason ? { patch_withheld_reason: result.patch_withheld_reason } : {}),
-    report_text: reportText, notification: result.notification,
+    report_text: reportText, notification: result.notification, ...result.diagramMetadata,
   };
   return view;
 }

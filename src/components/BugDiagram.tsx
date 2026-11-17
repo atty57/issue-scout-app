@@ -184,9 +184,12 @@ function Canvas({ diagram, shown, name, reasoning, selection, onOpen }: {
   const fit = useCallback(() => {
     if (!box.current) return;
     // Width decides the zoom. The canvas is as tall as the graph (the page scrolls), so height never shrinks it.
-    const room = box.current.clientWidth - 2 * PAD;
+    // Nested report panels can be narrower than the sample page. Use the spare width for gutters without
+    // clipping a graph that still fits at the readable zoom floor. Larger graphs retain panning.
+    const across = Math.max(0, Math.min(PAD, (box.current.clientWidth - shape.width * MIN_FIT) / 2));
+    const room = box.current.clientWidth - 2 * across;
     const zoom = Math.min(1, Math.max(MIN_FIT, room / shape.width));
-    const x = shape.width * zoom <= room ? (box.current.clientWidth - shape.width * zoom) / 2 - shape.left * zoom : PAD - shape.left * zoom;
+    const x = shape.width * zoom <= room ? (box.current.clientWidth - shape.width * zoom) / 2 - shape.left * zoom : across - shape.left * zoom;
     fitted.current = { x, y: PAD, zoom };
     void flow.setViewport(fitted.current);
   }, [flow, shape]);
@@ -441,6 +444,13 @@ export function BugDiagram({ diagram, reasoning }: { diagram: Diagram; reasoning
         </ol>
       </section>
 
+      <ReasoningPanel reasoning={reasoning} />
+    </div>
+  );
+}
+
+export function ReasoningPanel({ reasoning }: { reasoning: Reasoning }) {
+  return (
       <section className="diagram-reasoning" aria-label="Reasoning behind the fix">
         <h3>Reasoning behind the fix</h3>
         <dl>
@@ -454,6 +464,5 @@ export function BugDiagram({ diagram, reasoning }: { diagram: Diagram; reasoning
           </div>
         </dl>
       </section>
-    </div>
   );
 }

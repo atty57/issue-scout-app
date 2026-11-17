@@ -240,11 +240,11 @@ h3 { font-size: 14px; font-weight: 600; }
 }
 
 /* Visual bug explainer (prototype). React Flow draws the canvas; these rules give it the app's theme. */
-.bug-diagram { display: grid; gap: 20px; margin-top: 16px; min-width: 0; }
+.bug-diagram { display: grid; gap: 20px; margin-top: 16px; min-width: 0; container-type: inline-size; }
 .diagram-issue { font-size: 18px; margin: 20px 0 0; overflow-wrap: anywhere; }
 .diagram-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); gap: 20px; align-items: start; min-width: 0; }
 .diagram-main > * { min-width: 0; }
-@media (max-width: 1180px) { .diagram-main { grid-template-columns: minmax(0, 1fr); } }
+@container (max-width: 840px) { .diagram-main { grid-template-columns: minmax(0, 1fr); } }
 .diagram-canvas { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
 .diagram-canvas .react-flow {
   --xy-background-color: var(--surface); --xy-edge-stroke: var(--subtle); --xy-edge-stroke-selected: var(--green);
