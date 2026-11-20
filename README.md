@@ -11,14 +11,14 @@ preparing draft fixes and reviewing what Scout could actually validate.
 
 <p>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-a8d5ba?style=flat-square&labelColor=222225"></a>
-  <a href="https://github.com/atty57/issue-scout-app/releases/tag/v0.1.0"><img alt="Version: 0.1.0 beta" src="https://img.shields.io/badge/version-0.1.0_beta-a8d5ba?style=flat-square&labelColor=222225"></a>
+  <a href="https://github.com/atty57/issue-scout-app/releases/tag/v0.2.0"><img alt="Version: 0.2.0 beta" src="https://img.shields.io/badge/version-0.2.0_beta-a8d5ba?style=flat-square&labelColor=222225"></a>
   <img alt="Platform: Windows x64" src="https://img.shields.io/badge/platform-Windows_x64-a8d5ba?style=flat-square&labelColor=222225">
   <img alt="Installer: unsigned" src="https://img.shields.io/badge/installer-unsigned_beta-e7c978?style=flat-square&labelColor=222225">
 </p>
 
-**[Download the Windows installer (.exe)](https://github.com/atty57/issue-scout-app/releases/download/v0.1.0/Issue-Scout-Setup-0.1.0-x64.exe)**
+**[Download the Windows installer (.exe)](https://github.com/atty57/issue-scout-app/releases/download/v0.2.0/Issue-Scout-Setup-0.2.0-x64.exe)**
 
-[Release notes and checksum](https://github.com/atty57/issue-scout-app/releases/tag/v0.1.0) ·
+[Release notes and checksum](https://github.com/atty57/issue-scout-app/releases/tag/v0.2.0) ·
 [Get started](#getting-started) · [Roadmap](#roadmap) ·
 [Report an issue](https://github.com/atty57/issue-scout-app/issues)
 
@@ -69,13 +69,19 @@ The interface distinguishes verified fixes, unverified drafts, no-fix outcomes a
 A successful GitHub Actions run alone does not count as a verified fix. When evidence is missing or unavailable,
 the app says so.
 
-**Experimental: bug explanations.** In builds from source, a run's report opens on an **Explain** tab: one diagram
+**Experimental: bug explanations.** A run's report has an **Explain** tab: one diagram
 of how the bug happens, where the fix steps in and why, shown as **Before**, **After** and **Changes**. Select a
 step to see its code in the original or patched version, Scout's explanation, and the recorded checks tied to it.
 Every step and connection says whether it was reported in the issue or is Scout's reading of the code; a diagram
 never changes a run's outcome. Diagrams need an engine that saves a source-checked explanation, which the public
 template doesn't do yet. Until then the tab says why no diagram is shown and lists the saved changes and Scout's
-reasoning. The v0.1.0 installer doesn't include this tab.
+reasoning, and reports open on the **Review brief**. The tab is new in 0.2.0.
+
+<img src="assets/readme/explainer-dark.png" alt="The Explain tab's Changes view for a real python-docx fix: the reported failure removed by the patch, the added fix step, and the inspector showing the original line raise NotImplementedError matched against the saved patch" width="640">
+
+<sub>The 0.2.0 app's Explain tab on a real run for
+<a href="https://github.com/python-openxml/python-docx/issues/1313">python-docx #1313</a>. That run used a private
+test copy of the engine; the public template doesn't save diagrams yet.</sub>
 
 **You decide what to contribute.** Scout prepares drafts and evidence for your review; it does not claim issues,
 post comments or open pull requests on target projects for you.
@@ -109,7 +115,7 @@ The desktop app manages your repository. The separate template supplies the engi
 
 ### Install the app
 
-**[Download Issue-Scout-Setup-0.1.0-x64.exe](https://github.com/atty57/issue-scout-app/releases/download/v0.1.0/Issue-Scout-Setup-0.1.0-x64.exe)**
+**[Download Issue-Scout-Setup-0.2.0-x64.exe](https://github.com/atty57/issue-scout-app/releases/download/v0.2.0/Issue-Scout-Setup-0.2.0-x64.exe)**
 
 Run the installer, open Issue Scout, then:
 
@@ -125,10 +131,10 @@ You do need access to GitHub Actions and valid credentials for your chosen model
 ### Check the download
 
 Compare the downloaded installer's hash with `SHA256SUMS.txt` on the
-[release page](https://github.com/atty57/issue-scout-app/releases/tag/v0.1.0):
+[release page](https://github.com/atty57/issue-scout-app/releases/tag/v0.2.0):
 
 ```powershell
-Get-FileHash .\Issue-Scout-Setup-0.1.0-x64.exe -Algorithm SHA256
+Get-FileHash .\Issue-Scout-Setup-0.2.0-x64.exe -Algorithm SHA256
 ```
 
 The checksum helps detect a changed download; it does not replace a publisher signature.
@@ -188,8 +194,8 @@ Signing out or disconnecting does not erase email records already held by the re
 
 ### Future directions: personalization and visual understanding
 
-None of these is in the current v0.1.0 beta. The bug explainer is in progress in source builds; the others are
-proposed contributor projects.
+The bug explainer is in progress, and its Explain tab is in the 0.2.0 beta; the others are proposed contributor
+projects.
 
 - [ ] **Contribution-based personalization.** Opt-in import of authored PRs, merged contributions and changed
   files to improve issue recommendations. Combine observed experience with explicit feedback and learning goals;

@@ -71,7 +71,9 @@ Run the packaged app (`release/win-unpacked/Issue Scout.exe`, then the installer
    in, and `Uninstall Issue Scout.exe /currentuser /S` removes the program, the shortcut and the uninstall entry.
    The app's data in `%APPDATA%\Issue Scout` is kept on uninstall. Sign out first to remove the stored token.
 
-The 0.1.0 build passed all seven checks on 2026-11-09 with the second test account.
+The 0.1.0 build passed all seven checks on 2026-11-09 with the second test account. The 0.2.0 build passed
+checks 1 and 7 on 2026-11-20: a launch with a fresh profile, and a silent install over 0.1.0 that kept the account
+data unchanged. Checks 2-6 were not repeated on that exact build, and its uninstall was not repeated.
 
 ### Redesigned Windows UI
 
@@ -99,7 +101,7 @@ an explicit warning in its release notes; Windows can warn or block installation
 Signing verifies publisher/integrity and does not guarantee immediate SmartScreen reputation. See
 [Microsoft's signing options](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options).
 
-The 0.1.0 build is **unsigned**. Windows shows "Windows protected your PC" (SmartScreen) and "Unknown publisher" for
+The 0.1.0 and 0.2.0 builds are **unsigned**. Windows shows "Windows protected your PC" (SmartScreen) and "Unknown publisher" for
 an unsigned installer downloaded from the internet. Before a signed release:
 
 - **Certificate.** Use an Authenticode code-signing certificate issued to the publisher, or a managed service such
@@ -148,7 +150,9 @@ creation can start billing, so select a provider before provisioning anything. N
 ### Public downloads
 
 Published 2026-11-11: `atty57/issue-scout-app` is public and the unsigned Windows beta is available as
-[v0.1.0](https://github.com/atty57/issue-scout-app/releases/tag/v0.1.0). End users do not need a GitHub account to
+[v0.1.0](https://github.com/atty57/issue-scout-app/releases/tag/v0.1.0). The second unsigned beta,
+[v0.2.0](https://github.com/atty57/issue-scout-app/releases/tag/v0.2.0), followed on 2026-11-20 from commit
+`67cb8c2`; it adds the Explain tab and leaves the hand-written explainer samples out of the build. End users do not need a GitHub account to
 download a public release; GitHub sign-in happens inside the app for their own Scout repository.
 
 Before publishing: choose signed release or explicitly unsigned beta, commit the release tooling, build from the
@@ -158,7 +162,9 @@ as unsigned and must not claim a verified publisher or guaranteed Windows trust.
 verified assets from `release-signed/`. For an unsigned beta, use the tested assets from `release/`.
 
 The generic local notes template is in `out/distribution/release-notes.md`; the published beta notes are in
-`out/distribution/beta-notes.md`. The beta contains the tested installer and checksum, marked prerelease.
+`out/distribution/beta-notes.md` (0.1.0) and `out/distribution/0.2.0/release-notes.md`. Release builds
+(`npm run build`, `npm run dist:win`) never contain the sample page; check `dist/assets` for sample text before
+sharing a build. The beta contains the tested installer and checksum, marked prerelease.
 Publish only after reviewing the selected assets and notes. Do not attach `win-unpacked/`, local profiles or logs.
 After publication, link the README to the actual release; do not advertise a nonexistent latest installer.
 
@@ -176,7 +182,7 @@ After publication, link the README to the actual release; do not advertise a non
 - **Engine updates are separate.** The app updates itself. Each user's Scout repository keeps its own copy of the
   engine, which this app doesn't update yet (the open engine update contract).
 
-## Known gaps in 0.1.0
+## Known gaps (0.1.0 and 0.2.0)
 
 - Icons come from `build/icon.svg` (the sidebar's compass mark). `build/icon.ico` (16–256 px) is the exe, installer
   and shortcut icon, and `electron/icon.png` (256 px) is the window icon; regenerate both when the logo changes. The
