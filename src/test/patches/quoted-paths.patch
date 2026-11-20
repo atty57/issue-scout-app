@@ -1,0 +1,15 @@
+diff --git "a/na\303\257ve.txt" "b/na\303\257ve.txt"
+index 587be6b..975fbec 100644
+--- "a/na\303\257ve.txt"
++++ "b/na\303\257ve.txt"
+@@ -1 +1 @@
+-x
++y
+diff --git a/with space.txt b/with space.txt
+index 422c2b7..55dce13 100644
+--- a/with space.txt	
++++ b/with space.txt	
+@@ -1,2 +1,2 @@
+ a
+-b
++B

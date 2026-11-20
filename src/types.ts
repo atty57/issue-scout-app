@@ -276,6 +276,9 @@ export type HistoryItem = {
 };
 export type HistoryResponse = { items: HistoryItem[]; skipped: number };
 export type RunReport = {
+  /** Optional engine-checked diagram; validated independently so it never changes report/outcome handling. */
+  explanation?: unknown;
+  explanation_unavailable_reason?: string;
   root_cause: string;
   approach: string;
   risks: string;

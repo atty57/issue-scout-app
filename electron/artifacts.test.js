@@ -6,6 +6,49 @@ import { engineArchive, engineFiles, streamed, zip } from "./zip-fixture.js";
 const small = { archive: 4096, file: 100, total: 150, files: 3 };
 const unreadable = (run) => expect(run).toThrow(ArchiveError);
 
+describe("optional real-run explanation metadata", () => {
+  const files = (extra) => {
+    const saved = engineFiles("fix_verified");
+    const result = JSON.parse(saved["result.json"]);
+    return { ...saved, "result.json": JSON.stringify({ ...result, ...extra }) };
+  };
+  it("preserves engine-checked diagrams without changing recorded outcomes", () => {
+    const explanation = { format_version: 1, code_checked: true, base_commit: "a".repeat(40), sample: false, kind: "behaviour", nodes: [], edges: [] };
+    const run = artifactView(files({ base_commit: explanation.base_commit, explanation }));
+    expect(run.outcome).toBe("fix_verified");
+    expect(run.report.explanation).toEqual(explanation);
+  });
+  it.each([
+    { format_version: 2, code_checked: true, base_commit: "a".repeat(40) },
+    { format_version: 1, code_checked: false, base_commit: "a".repeat(40) },
+    { format_version: 1, code_checked: true, base_commit: "b".repeat(40) },
+    { format_version: 1, code_checked: true, base_commit: "a".repeat(40), sample: true },
+    "not a diagram",
+  ])("keeps the report readable when optional metadata is unusable", (explanation) => {
+    const run = artifactView(files({ base_commit: "a".repeat(40), explanation }));
+    expect(run.outcome).toBe("fix_verified");
+    expect(run.report.root_cause).toBeTruthy();
+    expect(run.report.explanation).toBeUndefined();
+    expect(run.report.explanation_unavailable_reason).toBeTruthy();
+  });
+  it("never forwards a diagram when its patch was withheld", () => {
+    const explanation = { format_version: 1, code_checked: true, sample: false, kind: "behaviour", base_commit: "a".repeat(40), private_code: "withheld-contents" };
+    const run = artifactView(files({ base_commit: explanation.base_commit, explanation, outcome: "fix_not_verified", patch_file: null, patch_withheld_reason: "Credential-shaped output" }));
+    expect(run.report.explanation).toBeUndefined();
+    expect(JSON.stringify(run.report)).not.toContain("withheld-contents");
+  });
+  it("keeps a valid report readable even when optional metadata is nested too deeply", () => {
+    const saved = files({ base_commit: "a".repeat(40), explanation: "DEEP_METADATA" });
+    const nested = '['.repeat(15000) + '0' + ']'.repeat(15000);
+    const metadata = '{"format_version":1,"code_checked":true,"sample":false,"kind":"behaviour","base_commit":"' + "a".repeat(40) + '","extra":' + nested + '}';
+    saved["result.json"] = saved["result.json"].replace('"DEEP_METADATA"', metadata);
+    const run = artifactView(saved);
+    expect(run.outcome).toBe("fix_verified");
+    expect(run.report.explanation).toBeUndefined();
+    expect(run.report.explanation_unavailable_reason).toBeTruthy();
+  });
+});
+
 describe("reading a run's archive", () => {
   it("reads the engine's files from deflated or stored entries and ignores the rest", () => {
     const files = readZip(zip([

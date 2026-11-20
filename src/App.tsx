@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -31,6 +31,10 @@ import Settings from "./pages/Settings";
 import Runs from "./pages/Runs";
 import Projects from "./pages/Projects";
 import ScoutSettings, { scoutSections, type ScoutSection } from "./pages/ScoutSettings";
+
+// Prototype page on hand-written samples; loaded only when opened, so the diagram library stays out of the main bundle.
+const SAMPLE_ROUTE = "/samples/explainer";
+const ExplainerSample = lazy(() => import("./pages/ExplainerSample"));
 
 const navigation = [
   { route: "/", label: "Your shortlist", icon: LayoutGrid },
@@ -76,7 +80,7 @@ export default function App() {
   const settingSection = scoutSections.find(item => item.path === page)
     ?? (!isMock && page.startsWith("/scout-settings/") ? scoutSections[0] : undefined);
   const pageLabel = me?.onboarding === "needs_repository" ? "Repository setup"
-    : settingSection ? `Scout settings · ${settingSection.label}` : pages.find((item) => current(item.route))?.label;
+    : settingSection ? `Scout settings · ${settingSection.label}` : page === SAMPLE_ROUTE ? "Sample bug explanation" : pages.find((item) => current(item.route))?.label;
   const [scenario, setScenario] = useState<DemoScenario>("ready");
   const [dark, setDark] = useState(() => {
     try {
@@ -501,6 +505,10 @@ export default function App() {
             <Profile />
           ) : page === "/history" ? (
             <HistoryPage />
+          ) : page === SAMPLE_ROUTE ? (
+            <Suspense fallback={<Loading label="Loading the sample…" />}>
+              <ExplainerSample />
+            </Suspense>
           ) : page === "/settings" ? (
             <Settings me={me} onSignedOut={signedOut} onUploaded={uploaded} onRepositoryChanged={setMe} />
           ) : (
@@ -516,6 +524,7 @@ export default function App() {
         </main>
         <footer className="app-footer">
           <span>Built for meaningful contributions.</span>
+          <a href={`#${SAMPLE_ROUTE}`}>Preview: sample bug explanation</a>
           {isMock && (
             <span>Demo data · repositories and issues are placeholders</span>
           )}

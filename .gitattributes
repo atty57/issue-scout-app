@@ -1,0 +1,2 @@
+# Real git diff fixtures: line endings are part of what's tested.
+src/test/patches/*.patch -text

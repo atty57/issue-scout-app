@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -29,6 +29,8 @@ import {
   Markdown,
   useResource,
 } from "../components/ui";
+
+const RunExplanation = lazy(() => import("../components/RunExplanation"));
 
 export default function Runs({ id }: { id?: string }) {
   return id ? <RunDetail key={id} id={id} /> : <RunIndex />;
@@ -207,7 +209,7 @@ function RunDetail({ id }: { id: string }) {
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState("brief");
+  const [tab, setTab] = useState(isMock ? "brief" : "explain");
   const announced = useRef("");
   useEffect(() => {
     let active = true;
@@ -414,6 +416,7 @@ function RunDetail({ id }: { id: string }) {
                     aria-label="Report section"
                   >
                     {[
+                      ...(!isMock ? [["explain", "Explain"]] : []),
                       ["brief", "Review brief"],
                       ["patch", "Patch"],
                       ["validation", "Validation"],
@@ -430,7 +433,11 @@ function RunDetail({ id }: { id: string }) {
                     ))}
                   </div>
                   <div className="panel report-content">
-                    {tab === "brief" ? (
+                    {tab === "explain" ? (
+                      <Suspense fallback={<Loading label="Opening the explanation…" />}>
+                        <RunExplanation run={run} onPatch={() => setTab("patch")} />
+                      </Suspense>
+                    ) : tab === "brief" ? (
                       <ReviewBrief report={run.report} />
                     ) : tab === "patch" ? (
                       <>
