@@ -33,8 +33,11 @@ import Projects from "./pages/Projects";
 import ScoutSettings, { scoutSections, type ScoutSection } from "./pages/ScoutSettings";
 
 // Prototype page on hand-written samples; loaded only when opened, so the diagram library stays out of the main bundle.
+// Development and `npm run start:samples` builds only: release builds have neither the page nor its footer link, and
+// the samples aren't bundled into them.
 const SAMPLE_ROUTE = "/samples/explainer";
-const ExplainerSample = lazy(() => import("./pages/ExplainerSample"));
+const SHOW_SAMPLES = import.meta.env.DEV || import.meta.env.MODE === "samples";
+const ExplainerSample = SHOW_SAMPLES ? lazy(() => import("./pages/ExplainerSample")) : () => null;
 
 const navigation = [
   { route: "/", label: "Your shortlist", icon: LayoutGrid },
@@ -80,7 +83,7 @@ export default function App() {
   const settingSection = scoutSections.find(item => item.path === page)
     ?? (!isMock && page.startsWith("/scout-settings/") ? scoutSections[0] : undefined);
   const pageLabel = me?.onboarding === "needs_repository" ? "Repository setup"
-    : settingSection ? `Scout settings · ${settingSection.label}` : page === SAMPLE_ROUTE ? "Sample bug explanation" : pages.find((item) => current(item.route))?.label;
+    : settingSection ? `Scout settings · ${settingSection.label}` : page === SAMPLE_ROUTE && SHOW_SAMPLES ? "Sample bug explanation" : pages.find((item) => current(item.route))?.label;
   const [scenario, setScenario] = useState<DemoScenario>("ready");
   const [dark, setDark] = useState(() => {
     try {
@@ -505,7 +508,7 @@ export default function App() {
             <Profile />
           ) : page === "/history" ? (
             <HistoryPage />
-          ) : page === SAMPLE_ROUTE ? (
+          ) : page === SAMPLE_ROUTE && SHOW_SAMPLES ? (
             <Suspense fallback={<Loading label="Loading the sample…" />}>
               <ExplainerSample />
             </Suspense>
@@ -524,7 +527,7 @@ export default function App() {
         </main>
         <footer className="app-footer">
           <span>Built for meaningful contributions.</span>
-          <a href={`#${SAMPLE_ROUTE}`}>Preview: sample bug explanation</a>
+          {SHOW_SAMPLES && <a href={`#${SAMPLE_ROUTE}`}>Preview: sample bug explanation</a>}
           {isMock && (
             <span>Demo data · repositories and issues are placeholders</span>
           )}

@@ -231,10 +231,12 @@ npm start
 | `npm test` | Run frontend journeys and Electron backend tests. |
 | `npm run build` | Type-check and build the production renderer. |
 | `npm start` | Build and launch Electron. |
+| `npm run start:samples` | Build and launch Electron with the hand-written bug-explainer samples. |
 | `npm run dist:win` | Build a local Windows x64 installer in `release/`; never publishes. |
 
-To try the bug explainer without a run, start the app and open **Preview: sample bug explanation** in the page
-footer. Its three examples are written by hand and labelled as such. The design, the evidence rules and the
+To try the bug explainer without a run, start the app with `npm run start:samples` and open
+**Preview: sample bug explanation** in the page footer. Its three examples are written by hand and labelled as
+such; release builds leave the page out. The design, the evidence rules and the
 optional engine fields are in [docs/evidence-walkthrough.md](docs/evidence-walkthrough.md).
 
 The optional signed-build tooling is documented in [RELEASING.md](RELEASING.md). No signing service is configured

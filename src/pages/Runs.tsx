@@ -209,7 +209,9 @@ function RunDetail({ id }: { id: string }) {
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState(isMock ? "brief" : "explain");
+  // A report opens on Explain only when its run saved a diagram; otherwise on the Review brief, as before.
+  const [picked, setTab] = useState<string>();
+  const tab = picked ?? (!isMock && run?.report?.explanation != null ? "explain" : "brief");
   const announced = useRef("");
   useEffect(() => {
     let active = true;

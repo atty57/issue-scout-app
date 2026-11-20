@@ -31,13 +31,14 @@ screen readers, broader scaling and a new packaged installer remain untested for
 
 ## Trying the source preview
 
-Run `npm ci`, then `npm start`. In the workspace footer, open **Preview: sample bug explanation**. All three
+Run `npm ci`, then `npm run start:samples`. In the workspace footer, open **Preview: sample bug explanation**.
+Release builds (`npm start`, `npm run dist:win`) have neither the page nor the link, and don't bundle the samples. All three
 examples are written by hand and labelled on screen. Try Before, After and Changes, select a step or connection,
 and inspect its code, reasoning and recorded-check examples. Keyboard activation uses Enter or Space; Escape
 returns focus to the control that opened the inspector. Plain `+`, `-` and `0` control the focused diagram.
 
 This preview is for source builds of the default branch. The published v0.1.0 installer does not contain it.
-Gate the sample route and footer link before an installer release. Real-run explanations are implemented on this branch
+A real run's report opens on Explain only when the run saved a diagram; otherwise on the Review brief. Real-run explanations are implemented on this branch
 and verified with a fresh run in the private engine test copy. Markdown/Obsidian exports
 are not implemented. Packaged-app, screen-reader and broader Windows scaling checks remain outstanding.
 

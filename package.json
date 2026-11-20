@@ -5,7 +5,7 @@
   "author": "atty57",
   "license": "MIT",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "main": "electron/main.js",
   "scripts": {
@@ -13,7 +13,8 @@
     "start": "npm run build && electron .",
     "test": "vitest run",
     "dist:win": "npm run build && electron-builder --win nsis --x64 --publish never",
-    "dist:win:signed": "powershell -NoProfile -File scripts/build-signed-windows.ps1"
+    "dist:win:signed": "powershell -NoProfile -File scripts/build-signed-windows.ps1",
+    "start:samples": "tsc -b && vite build --mode samples && electron ."
   },
   "dependencies": {
     "libsodium-wrappers": "0.8.4",

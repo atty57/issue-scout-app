@@ -28,12 +28,26 @@ it("opens an engine-checked diagram on the actual run detail page, preserving th
   expect(await screen.findByRole("heading", { name: "Root cause" })).toBeInTheDocument();
 });
 
+it("opens on Explain only when the run saved a diagram", async () => {
+  vi.spyOn(api, "run").mockResolvedValue(saved());
+  const { unmount } = render(<Runs id="12345" />);
+  expect(await screen.findByRole("button", { name: "Explain" })).toHaveAttribute("aria-pressed", "true");
+  unmount();
+  const old = saved();
+  delete old.report!.explanation;
+  vi.spyOn(api, "run").mockResolvedValue(old);
+  render(<Runs id="12345" />);
+  expect(await screen.findByRole("button", { name: "Review brief" })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("button", { name: "Explain" })).toHaveAttribute("aria-pressed", "false");
+  expect(await screen.findByRole("heading", { name: "Root cause" })).toBeInTheDocument();
+});
+
 it("keeps old runs readable and explains why they have no diagram", async () => {
   const run = saved();
   delete run.report!.explanation;
   vi.spyOn(api, "run").mockResolvedValue(run);
   render(<Runs id="12345" />);
-  await screen.findByRole("button", { name: "Explain" });
+  fireEvent.click(await screen.findByRole("button", { name: "Explain" }));
   expect(await screen.findByText(/didn’t save a step-by-step diagram/)).toBeInTheDocument();
   expect(screen.getByRole("region", { name: "Reasoning behind the fix" })).toBeInTheDocument();
   expect(screen.queryByRole("tab", { name: "Before" })).not.toBeInTheDocument();
@@ -46,7 +60,7 @@ it("does not expose a withheld patch through the diagram", async () => {
   run.outcome = "fix_not_verified";
   vi.spyOn(api, "run").mockResolvedValue(run);
   const { container } = render(<Runs id="12345" />);
-  await screen.findByRole("button", { name: "Explain" });
+  fireEvent.click(await screen.findByRole("button", { name: "Explain" }));
   expect(await screen.findByText(/patch was withheld.*no diagram/i)).toBeInTheDocument();
   expect(container.querySelector(".react-flow")).toBeNull();
   expect(container).not.toHaveTextContent("EMPTY_STATE");
