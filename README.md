@@ -69,6 +69,14 @@ The interface distinguishes verified fixes, unverified drafts, no-fix outcomes a
 A successful GitHub Actions run alone does not count as a verified fix. When evidence is missing or unavailable,
 the app says so.
 
+**Experimental: bug explanations.** In builds from source, a run's report opens on an **Explain** tab: one diagram
+of how the bug happens, where the fix steps in and why, shown as **Before**, **After** and **Changes**. Select a
+step to see its code in the original or patched version, Scout's explanation, and the recorded checks tied to it.
+Every step and connection says whether it was reported in the issue or is Scout's reading of the code; a diagram
+never changes a run's outcome. Diagrams need an engine that saves a source-checked explanation, which the public
+template doesn't do yet. Until then the tab says why no diagram is shown and lists the saved changes and Scout's
+reasoning. The v0.1.0 installer doesn't include this tab.
+
 **You decide what to contribute.** Scout prepares drafts and evidence for your review; it does not claim issues,
 post comments or open pull requests on target projects for you.
 
@@ -180,7 +188,8 @@ Signing out or disconnecting does not erase email records already held by the re
 
 ### Future directions: personalization and visual understanding
 
-These are proposed contributor projects, not features available in the current beta.
+None of these is in the current v0.1.0 beta. The bug explainer is in progress in source builds; the others are
+proposed contributor projects.
 
 - [ ] **Contribution-based personalization.** Opt-in import of authored PRs, merged contributions and changed
   files to improve issue recommendations. Combine observed experience with explicit feedback and learning goals;
@@ -189,13 +198,17 @@ These are proposed contributor projects, not features available in the current b
 - [ ] **Contribution knowledge graph.** Explore connections between contributions, repositories, languages,
   topics and suggested issues. Link recommendations to supporting evidence, distinguish observed facts from
   inferred topics, and provide a searchable list alternative.
-- [ ] **Visual bug explainer.** Walk through a reported symptom, relevant code, proposed cause, patch and
-  regression evidence. Connect diagram nodes to commit-specific files, diff hunks and recorded test results.
-  Clearly mark unverified explanations and missing evidence; a generated diagram must never establish a
-  verified-fix outcome on its own.
+- [ ] **Visual bug explainer** (in progress). Done in the app: Before/After/Changes diagrams, code references
+  checked against the saved patch (the engine checks them against the original commit), recorded checks beside
+  the steps they concern,
+  keyboard navigation, a text alternative and a hand-written sample page. One live run has produced a
+  source-checked diagram, using a private test copy of the engine. Remaining: the engine change in the public
+  template, a release that includes it, screen-reader and display-scaling checks, and optional Markdown or
+  Obsidian Canvas export. Unverified explanations and missing evidence stay marked; a diagram must never establish
+  a verified-fix outcome on its own.
 
-Suggested sequence: contribution import → editable preference feedback → evidence-linked bug explanations →
-interactive contribution graph. Public contributions would be the default; private-repository analysis would
+Suggested sequence for the rest: contribution import → editable preference feedback → interactive contribution
+graph. Public contributions would be the default; private-repository analysis would
 require explicit opt-in. Imported history would stay in local storage or the user's private Scout repository,
 with model-analysis costs under the user's control.
 
@@ -220,12 +233,17 @@ npm start
 | `npm start` | Build and launch Electron. |
 | `npm run dist:win` | Build a local Windows x64 installer in `release/`; never publishes. |
 
+To try the bug explainer without a run, start the app and open **Preview: sample bug explanation** in the page
+footer. Its three examples are written by hand and labelled as such. The design, the evidence rules and the
+optional engine fields are in [docs/evidence-walkthrough.md](docs/evidence-walkthrough.md).
+
 The optional signed-build tooling is documented in [RELEASING.md](RELEASING.md). No signing service is configured
 for the current unsigned beta.
 
 ```text
 src/        React interface, shared components and frontend tests
 electron/   Main process, GitHub integration, preload bridge and backend tests
+docs/       Design notes, including the bug explainer's specification
 build/      Application icons and optional signing configuration
 scripts/    Release build and signature-verification helpers
 ```
@@ -249,6 +267,8 @@ Issue Scout desktop is licensed under the [MIT License](LICENSE).
 Third-party components retain their respective licenses.
 
 - [Beautiful UI](https://www.beautifului.dev/) for the adapted presentation patterns; attribution is included in
+  [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- [React Flow](https://reactflow.dev/) for drawing the bug-explainer diagrams; its MIT notice is in
   [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - [Electron](https://www.electronjs.org/), [React](https://react.dev/) and [TypeScript](https://www.typescriptlang.org/)
   for the application stack.

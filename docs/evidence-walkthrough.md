@@ -4,7 +4,8 @@ Direction revised 2026-11-14. The main experience is an interactive diagram of *
 fix intervenes and **why** that change was chosen, drawn for the particular issue and patch. The five-item evidence
 summary (Part 2) is supporting data for it, not the screen.
 
-Status (2026-11-17, branch `feat/evidence-walkthrough`): source builds connect real run pages to optional
+Status (2026-11-20, merged into the default branch `feat/scout-repo-profile` through PR #1; last verified 2026-11-17):
+source builds connect real run pages to optional
 engine-checked explanations. The engine implementation is deployed only to a separate private test copy; the
 public template is unchanged. Fresh-run verification on 2026-11-16 recorded `fix_verified` for
 [python-docx #1313](https://github.com/python-openxml/python-docx/issues/1313) and a source-checked
@@ -35,7 +36,7 @@ examples are written by hand and labelled on screen. Try Before, After and Chang
 and inspect its code, reasoning and recorded-check examples. Keyboard activation uses Enter or Space; Escape
 returns focus to the control that opened the inspector. Plain `+`, `-` and `0` control the focused diagram.
 
-This preview is for source builds on the feature branch. The published v0.1.0 installer does not contain it.
+This preview is for source builds of the default branch. The published v0.1.0 installer does not contain it.
 Gate the sample route and footer link before an installer release. Real-run explanations are implemented on this branch
 and verified with a fresh run in the private engine test copy. Markdown/Obsidian exports
 are not implemented. Packaged-app, screen-reader and broader Windows scaling checks remain outstanding.
